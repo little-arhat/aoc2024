@@ -1,0 +1,14 @@
+---
+BasedOnStyle: Chromium
+IndentWidth: 4
+UseTab: Never
+ColumnLimit: 80
+DerivePointerAlignment: false
+PointerAlignment: Left
+MaxEmptyLinesToKeep: 2
+AlignAfterOpenBracket: true
+BinPackArguments: false
+BinPackParameters: false
+AllowAllArgumentsOnNextLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
