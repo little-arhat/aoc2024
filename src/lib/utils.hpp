@@ -38,15 +38,30 @@ auto get_or_default(M&& m, K&& k, V def) -> V {
 }
 
 
-template <typename LArg, typename RArg, typename Left, typename Right>
-auto read_pairs(std::ifstream& file, Left la, Right ra) -> void {
+template <typename Stream, typename Tuple, std::size_t... I>
+void read_helper(Stream& s, Tuple& args, std::index_sequence<I...>) {
+    ((s >> std::get<I>(args)), ...);
+}
+
+template <typename Tuple, typename... Actions, std::size_t... I>
+void apply_actions(Tuple& args,
+                   std::index_sequence<I...>,
+                   Actions&&... actions) {
+    (std::forward<Actions>(actions)(std::get<I>(args)), ...);
+}
+
+template <typename... Args, typename... Actions>
+auto read_lines(std::ifstream& file, Actions&&... actions) -> void {
+    static_assert(sizeof...(Args) == sizeof...(Actions),
+                  "Number of arguments and actions must be the same.");
+
     std::string line;
     while (std::getline(file, line)) {
         std::istringstream s(line);
-        LArg left;
-        RArg right;
-        s >> left >> right;
-        la(left);
-        ra(right);
+        std::tuple<Args...> args;
+        read_helper(s, args, std::index_sequence_for<Args...>{});
+        apply_actions(args,
+                      std::index_sequence_for<Args...>{},
+                      std::forward<Actions>(actions)...);
     }
 }

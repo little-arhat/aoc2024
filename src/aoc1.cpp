@@ -16,7 +16,7 @@ auto first() -> void {
     std::ifstream file("../inputs/1.txt");
     std::vector<int> lefts;
     std::vector<int> rights;
-    read_pairs<int, int>(
+    read_lines<int, int>(
         file,
         [&lefts](int left) { lefts.push_back(left); },
         [&rights](int right) { rights.push_back(right); });
@@ -36,7 +36,7 @@ auto second() -> void {
     std::vector<int> lefts;
     std::unordered_map<int, int> rights;
 
-    read_pairs<int, int>(
+    read_lines<int, int>(
         file,
         [&lefts](int left) { lefts.push_back(left); },
         [&rights](int right) { rights[right]++; });
