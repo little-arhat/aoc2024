@@ -1,0 +1,11 @@
+*~
+*.orig
+/tags
+/TAGS
+build/
+*.pdf
+*.swp
+a.out
+*.log
+data/
+.cache
