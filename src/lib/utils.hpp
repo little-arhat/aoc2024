@@ -1,13 +1,12 @@
 #pragma once
 
-#include <fstream>
-#include <vector>
-#include <string>
 #include <filesystem>
-#include <stdexcept>
 #include <fstream>
 #include <print>
+#include <sstream>
+#include <stdexcept>
 #include <string>
+#include <vector>
 
 
 std::vector<std::string> slurp(const std::string& filename) {
@@ -36,4 +35,18 @@ auto get_or_default(M&& m, K&& k, V def) -> V {
     }
 
     return def;
+}
+
+
+template <typename LArg, typename RArg, typename Left, typename Right>
+auto read_pairs(std::ifstream& file, Left la, Right ra) -> void {
+    std::string line;
+    while (std::getline(file, line)) {
+        std::istringstream s(line);
+        LArg left;
+        RArg right;
+        s >> left >> right;
+        la(left);
+        ra(right);
+    }
 }
