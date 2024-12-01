@@ -26,3 +26,14 @@ std::vector<std::string> slurp(const std::string& filename) {
 
     return lines;
 }
+
+
+template <typename M, typename K, typename V>
+auto get_or_default(M&& m, K&& k, V def) -> V {
+    auto it = m.find(k);
+    if (it != m.end()) {
+        return it->second;
+    }
+
+    return def;
+}

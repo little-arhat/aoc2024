@@ -10,11 +10,13 @@
 #include <algorithm>
 #include <numeric>
 
+#include "utils.hpp"
+
 namespace r = std::ranges;
 
 
 template <typename Left, typename Right>
-void read_lines(std::ifstream& file, Left lefta, Right righta) {
+auto read_lines(std::ifstream& file, Left lefta, Right righta) -> void {
     std::string line;
     while (std::getline(file, line)) {
         std::istringstream ints(line);
@@ -48,21 +50,16 @@ auto second () -> void {
     std::ifstream file("../inputs/1.txt");
     std::vector<int> lefts;
     std::unordered_map<int, int> rights;
+
     read_lines(file,
         [&lefts](int left) { lefts.push_back(left); },
         [&rights](int right) { rights[right]++; }
     );
 
-    int total = std::accumulate(lefts.begin(), lefts.end(), 0, [rights](int acc, auto&& left) {
-        int matches = 0;
-        auto it = rights.find(left);
-        if (it != rights.end()) {
-            matches = it->second;
-        }
-        int score = left * matches;
-        return acc + score;
+    int score = std::accumulate(lefts.begin(), lefts.end(), 0, [rights](int acc, auto&& left) {
+        return acc + left * get_or_default(rights, left, 0);
     });
-    std::println("{}", total);
+    std::println("{}", score);
 }
 
 
