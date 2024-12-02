@@ -65,3 +65,22 @@ auto read_lines(std::ifstream& file, Actions&&... actions) -> void {
                       std::forward<Actions>(actions)...);
     }
 }
+
+/// todo: more flexible reading (e.g. read n-tuple, call lambda)
+template <typename Action>
+auto read_lines(std::ifstream& file, Action action) -> void {
+    std::string line;
+    while (std::getline(file, line)) {
+        action(line);
+    }
+}
+
+template <typename T>
+auto sign(T val) -> int {
+    return (T(0) < val) - (val < T(0));
+}
+
+template <typename T>
+auto yn(T val) -> std::string {
+    return val ? "yes" : "no";
+}
