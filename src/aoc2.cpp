@@ -1,4 +1,5 @@
 
+#include <algorithm>
 #include <ranges>
 
 #include "utils.hpp"
@@ -43,6 +44,16 @@ auto first(std::string input) -> void {
 }
 
 
+template <typename T>
+std::vector<T> exclude(const std::vector<T>& input, std::size_t index) {
+    std::vector<T> result;
+    result.reserve(input.size() - 1);
+    result.insert(result.end(), input.begin(), input.begin() + index);
+    result.insert(result.end(), input.begin() + index + 1, input.end());
+    return result;
+}
+
+
 auto second(std::string input) -> void {
     std::ifstream file(input);
     int safe = 0;
@@ -72,16 +83,10 @@ auto second(std::string input) -> void {
         if (broken) {
             for (size_t i = 0; i < v.size(); i++) {
                 int last_diff = 0;
-
-                auto left = v | std::views::take(i);
-                auto right = v | std::views::drop(i + 1);
-                std::vector<int> r;
-                r.reserve(left.size() + right.size());
-                std::ranges::copy(left, std::back_inserter(r));
-                std::ranges::copy(right, std::back_inserter(r));
-                auto z = std::views::zip(r, r | std::views::drop(1));
+                std::vector<int> r = exclude(v, i);
                 bool good = true;
-                for (const auto [a, b] : z) {
+                for (const auto [a, b] :
+                     std::views::zip(r, r | std::views::drop(1))) {
                     if (auto ld = is_safe(a, b, last_diff)) {
                         last_diff = ld.value();
                     } else {
