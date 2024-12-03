@@ -10,21 +10,20 @@
 #include <vector>
 
 
-std::vector<std::string> slurp(const std::string& filename) {
-    if (!std::filesystem::exists(filename)) {
-        throw std::runtime_error("File does not exist: " + filename);
-    }
+auto slurp(const std::string& filename) -> std::string {
     std::ifstream file(filename);
-    if (!file.is_open()) {
-        throw std::runtime_error("Failed to open file: " + filename);
-    }
-    std::vector<std::string> lines;
-    std::string line;
-    while (std::getline(file, line)) {
-        lines.push_back(line);
-    }
+    std::string s((std::istreambuf_iterator<char>(file)),
+                  std::istreambuf_iterator<char>());
+    return s;
+}
 
-    return lines;
+
+auto aoc(int argc, char* argv[], std::string_view def) -> std::string {
+    if (argc > 1) {
+        return {argv[1]};
+    } else {
+        return std::string{def};
+    }
 }
 
 

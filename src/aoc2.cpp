@@ -105,11 +105,7 @@ auto second(std::string input) -> void {
 }
 
 auto main(int argc, char* argv[]) -> int {
-    std::string inp("../inputs/2.txt");
-    if (argc > 1) {
-        std::string arg1(argv[1]);
-        inp = arg1;
-    }
+    std::string inp = aoc(argc, argv, "../inputs/2.txt");
     first(inp);
     second(inp);
     return 0;
