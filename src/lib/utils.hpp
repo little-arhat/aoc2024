@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <print>
+#include <ranges>
 #include <sstream>
 #include <stdexcept>
 #include <string>
