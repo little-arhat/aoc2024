@@ -55,10 +55,8 @@ auto second(std::string s) -> void {
     });
 
     int found = 0;
-    auto gsize = static_cast<int>(g.size());
-    for (auto r : std::views::iota(1, gsize - 1)) {
-        auto gwidth = static_cast<int>(g[r].size());
-        for (auto c : std::views::iota(1, gwidth - 1)) {
+    for (auto r : std::views::iota(1, static_cast<int>(g.size()) - 1)) {
+        for (auto c : std::views::iota(1, static_cast<int>(g[r].size()) - 1)) {
             std::string lu_rb{g[r - 1][c - 1], g[r][c], g[r + 1][c + 1]};
             std::string lb_ru{g[r + 1][c - 1], g[r][c], g[r - 1][c + 1]};
             if ((lu_rb == "MAS" || lu_rb == "SAM") &&
