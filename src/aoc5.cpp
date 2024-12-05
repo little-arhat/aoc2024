@@ -55,11 +55,11 @@ auto second(std::string s) -> void {
             auto [first, second] = to_pair<int>(line, '|');
             forbidden[second].insert(first);
         } else {
-            auto update = split<int>(line, ',');
             bool valid = true;
             std::vector<int> ord;
             std::unordered_set<int> f;
 
+            auto update = split_gen<int>(line, ',');
             for (auto u : update) {
                 auto f_for_u = forbidden[u];
                 if (f.contains(u)) {

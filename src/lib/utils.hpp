@@ -102,13 +102,22 @@ auto split(const std::string& input, char c) -> std::vector<T> {
 
 template <typename T>
 auto to_pair(const std::string& input, char c) -> std::pair<T, T> {
-    auto parts = split<T>(input, c);
-
-    auto iter = parts.begin();
-    int first = *iter++;
-    int second = *iter;
-
+    auto pos = input.find(c);
+    T first, second;
+    std::from_chars(input.data(), input.data() + pos, first);
+    std::from_chars(input.data() + pos + 1,
+                    input.data() + input.size(),
+                    second);
     return {first, second};
+}
+
+template <typename T>
+auto split_gen(const std::string& inp, char c) {
+    return inp | std::views::split(c) | std::views::transform([](auto&& part) {
+               T value;
+               std::from_chars(&*part.begin(), &*part.end(), value);
+               return value;
+           });
 }
 
 
