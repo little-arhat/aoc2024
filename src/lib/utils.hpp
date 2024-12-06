@@ -2,6 +2,7 @@
 
 #include <charconv>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <print>
@@ -9,6 +10,7 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -141,4 +143,35 @@ std::ostream& print_map(std::ostream& os,
     for (auto it = m.begin(); it != m.end(); ++it)
         os << (it == m.begin() ? "" : sep) << it->first << ':' << it->second;
     return os << '}';
+}
+
+
+struct pair_hash {
+    template <class T1, class T2>
+    auto operator()(const std::pair<T1, T2>& p) const -> std::size_t {
+        return std::hash<T1>()(p.first) ^ (std::hash<T2>()(p.second) << 1);
+    }
+};
+
+
+struct tuple_hash {
+    template <typename... Args>
+    auto operator()(const std::tuple<Args...>& t) const -> std::size_t {
+        return std::apply(
+            [](const auto&... elems) {
+                std::size_t seed = 0;
+                ((seed ^= std::hash<std::decay_t<decltype(elems)>>{}(elems) +
+                          0x9e3779b9 + (seed << 6) + (seed >> 2)),
+                 ...);
+                return seed;
+            },
+            t);
+    }
+};
+
+
+template <typename T>
+auto deep_copy(const std::vector<std::vector<T>>& original)
+    -> std::vector<std::vector<T>> {
+    return original;
 }
