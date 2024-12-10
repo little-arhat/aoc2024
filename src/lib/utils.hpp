@@ -146,6 +146,13 @@ std::ostream& print_map(std::ostream& os,
 }
 
 
+template <typename T, typename Y>
+constexpr bool operator==(const std::pair<T, Y>& lhs,
+                          const std::pair<T, Y>& rhs) {
+    return lhs.first == rhs.first && lhs.second == rhs.second;
+}
+
+
 struct pair_hash {
     template <class T1, class T2>
     auto operator()(const std::pair<T1, T2>& p) const -> std::size_t {
@@ -174,4 +181,9 @@ template <typename T>
 auto deep_copy(const std::vector<std::vector<T>>& original)
     -> std::vector<std::vector<T>> {
     return original;
+}
+
+
+auto digit(char c) -> int {
+    return c - '0';
 }

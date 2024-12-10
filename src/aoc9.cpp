@@ -16,11 +16,6 @@ auto repeat(std::string s, std::size_t n) -> std::string {
 }
 
 
-auto digit(char c) -> int {
-    return c - '0';
-}
-
-
 // opt: can be merged?
 struct Block {
     int id, begin, size;
