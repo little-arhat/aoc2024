@@ -39,6 +39,7 @@ auto first(std::string s) -> void {
     std::println("{}", sum);
 }
 
+
 auto second(std::string s) -> void {
     std::ifstream file(s);
 
@@ -93,6 +94,7 @@ auto second(std::string s) -> void {
 
     std::println("{}", sum);
 }
+
 
 auto main(int argc, char* argv[]) -> int {
     std::string filename = aoc(argc, argv, "../inputs/5.txt");

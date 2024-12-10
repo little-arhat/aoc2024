@@ -1,8 +1,8 @@
 
 #include <array>
-#include <ranges>
 
 #include "utils.hpp"
+
 
 static const std::array<std::string, 2> W1 = {"XMAS", "SAMX"};
 // ROW, COL

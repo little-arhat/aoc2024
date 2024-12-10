@@ -1,22 +1,23 @@
 
 #include "utils.hpp"
 
+
 using pi = std::pair<int, int>;
+
 
 static constexpr pi UP{-1, 0};
 static constexpr pi DOWN{1, 0};
 static constexpr pi LEFT{0, -1};
 static constexpr pi RIGHT{0, 1};
-
 std::unordered_map<pi, pi, pair_hash> TURNS{{UP, RIGHT},
                                             {RIGHT, DOWN},
                                             {DOWN, LEFT},
                                             {LEFT, UP}};
-
 std::unordered_map<char, pi> DIRS{{'<', LEFT},
                                   {'>', RIGHT},
                                   {'^', UP},
                                   {'v', DOWN}};
+
 
 auto first(std::string s) -> void {
     std::ifstream file(s);
@@ -64,6 +65,7 @@ auto first(std::string s) -> void {
     }
     std::println("{}", visited.size());
 }
+
 
 auto second(std::string s) -> void {
     std::ifstream file(s);

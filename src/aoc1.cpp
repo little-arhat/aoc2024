@@ -2,10 +2,6 @@
 #include <algorithm>
 #include <cmath>
 #include <numeric>
-#include <print>
-#include <ranges>
-#include <unordered_map>
-#include <vector>
 
 #include "utils.hpp"
 
@@ -30,6 +26,7 @@ auto first() -> void {
         });
     std::println("{}", sum);
 }
+
 
 auto second() -> void {
     std::ifstream file("../inputs/1.txt");

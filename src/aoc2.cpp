@@ -17,6 +17,7 @@ auto is_safe(int a, int b, int last_diff) -> std::optional<int> {
     return {diff};
 }
 
+
 auto first(std::string input) -> void {
     std::ifstream file(input);
     int safe = 0;
@@ -103,6 +104,7 @@ auto second(std::string input) -> void {
 
     std::println("{}", safe);
 }
+
 
 auto main(int argc, char* argv[]) -> int {
     std::string inp = aoc(argc, argv, "../inputs/2.txt");

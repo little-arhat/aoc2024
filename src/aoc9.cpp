@@ -1,10 +1,11 @@
 
-#include <deque>
 #include "utils.hpp"
+
 
 auto repeat(char c, std::size_t n) -> std::string {
     return std::string(n, c);
 }
+
 
 auto repeat(std::string s, std::size_t n) -> std::string {
     std::string result;
@@ -14,33 +15,20 @@ auto repeat(std::string s, std::size_t n) -> std::string {
     return result;
 }
 
+
 auto digit(char c) -> int {
     return c - '0';
 }
 
 
-// opt: can be merged
+// opt: can be merged?
 struct Block {
     int id, begin, size;
 
-    [[nodiscard]]
     auto to_string() const -> const std::string {
         return std::format("B[id={}; beg={}; size={}]", id, begin, size);
     }
 };
-
-struct Span {
-    int begin, end, free_space;
-
-    [[nodiscard]]
-    auto to_string() const -> const std::string {
-        return std::format("S[beg={}; end={}; free={}]",
-                           begin,
-                           end,
-                           free_space);
-    }
-};
-
 
 template <>
 struct std::formatter<Block> : std::formatter<std::string> {
@@ -50,68 +38,23 @@ struct std::formatter<Block> : std::formatter<std::string> {
 };
 
 
+struct Span {
+    int begin, end, free_space;
+
+    auto to_string() const -> const std::string {
+        return std::format("S[beg={}; end={}; free={}]",
+                           begin,
+                           end,
+                           free_space);
+    }
+};
+
 template <>
 struct std::formatter<Span> : std::formatter<std::string> {
     auto format(Span s, format_context& ctx) const {
         return formatter<string>::format(s.to_string(), ctx);
     }
 };
-
-
-auto second(std::string s) -> void {
-    auto input = slurp(s);
-    size_t ns = input.size();
-
-    // id -> span
-    std::vector<Span> spans;
-    std::vector<Block> original;
-    int cursor = 0;
-    for (size_t i = 0; i < input.size(); i += 2) {
-        int file_id = i / 2;
-        int size = digit(input[i]);
-        int free_space = i < ns - 2 ? digit(input[i + 1]) : 0;
-        int total = size + free_space;
-        Span s{cursor, cursor + total, free_space};
-        spans.push_back(s);
-        Block b{file_id, cursor, size};
-        original.push_back(b);
-        cursor += total;
-    }
-
-    // unsorted
-    std::vector<Block> moved;
-    for (int i = original.size() - 1; i >= 0; --i) {
-        auto b = original[i];
-        bool m = false;
-        for (auto left : original) {
-            if (left.id == b.id) {
-                break;
-            }
-            Span* containing_span = &spans[left.id];
-            if (containing_span->free_space >= b.size) {
-                auto fs = containing_span->free_space;
-                auto mpos = containing_span->end - fs;
-                // can move
-                containing_span->free_space -= b.size;
-                Block mb{b.id, mpos, b.size};
-                moved.push_back(mb);
-                m = true;
-                break;
-            }
-        }
-        if (!m) {
-            moved.push_back(b);
-        }
-    }
-
-    long checksum = 0;
-    for (auto mb : moved) {
-        for (auto i = mb.begin; i < mb.begin + mb.size; i++) {
-            checksum += (i * mb.id);
-        }
-    }
-    std::println("{}", checksum);
-}
 
 
 auto first(std::string s) -> void {
@@ -166,6 +109,64 @@ auto first(std::string s) -> void {
     }
     std::println("{}", checksum);
 }
+
+
+auto second(std::string s) -> void {
+    auto input = slurp(s);
+    size_t ns = input.size();
+
+    // id -> span
+    // opt: Btree<free_space, vec<Span>>
+    std::vector<Span> spans;
+    std::vector<Block> original;
+    int cursor = 0;
+    for (size_t i = 0; i < input.size(); i += 2) {
+        int file_id = i / 2;
+        int size = digit(input[i]);
+        int free_space = i < ns - 2 ? digit(input[i + 1]) : 0;
+        int total = size + free_space;
+        Span s{cursor, cursor + total, free_space};
+        spans.push_back(s);
+        Block b{file_id, cursor, size};
+        original.push_back(b);
+        cursor += total;
+    }
+
+    // unsorted
+    std::vector<Block> moved;
+    for (int i = original.size() - 1; i >= 0; --i) {
+        auto b = original[i];
+        bool m = false;
+        for (auto left : original) {
+            if (left.id == b.id) {
+                break;
+            }
+            Span* containing_span = &spans[left.id];
+            if (containing_span->free_space >= b.size) {
+                auto fs = containing_span->free_space;
+                auto mpos = containing_span->end - fs;
+                // can move
+                containing_span->free_space -= b.size;
+                Block mb{b.id, mpos, b.size};
+                moved.push_back(mb);
+                m = true;
+                break;
+            }
+        }
+        if (!m) {
+            moved.push_back(b);
+        }
+    }
+
+    long checksum = 0;
+    for (auto mb : moved) {
+        for (auto i = mb.begin; i < mb.begin + mb.size; i++) {
+            checksum += (i * mb.id);
+        }
+    }
+    std::println("{}", checksum);
+}
+
 
 auto main(int argc, char* argv[]) -> int {
     std::string filename = aoc(argc, argv, "../inputs/9.txt");

@@ -1,12 +1,14 @@
 
 #include <cmath>
-
 #include "utils.hpp"
 
 using pi = std::pair<int, int>;
 
-auto find_harmonics(pi older, pi newer, int width, int height)
-    -> std::vector<pi> {
+
+auto find_harmonics(pi older,
+                    pi newer,
+                    int width,
+                    int height) -> std::vector<pi> {
     auto vdiff = std::abs(older.first - newer.first);
     auto hdiff = std::abs(older.second - newer.second);
     auto bl_tr = older.second > newer.second;
@@ -44,39 +46,6 @@ auto find_harmonics(pi older, pi newer, int width, int height)
     return r;
 }
 
-auto second(std::string s) -> void {
-    std::ifstream file(s);
-
-    std::vector<std::vector<char>> g;
-
-    read_lines(file, [&g](std::string line) {
-        g.emplace_back(line.begin(), line.end());
-    });
-    int w = g[0].size();
-    int h = g.size();
-
-    std::unordered_set<pi, pair_hash> nodes;
-    std::unordered_map<char, std::unordered_set<pi, pair_hash>> antennas;
-    int y = 0;
-    for (auto row : g) {
-        int x = 0;
-        for (auto ch : row) {
-            pi newer = {y, x};
-            if (ch != '.') {
-                for (auto older : antennas[ch]) {
-                    auto a = find_harmonics(older, newer, w, h);
-                    nodes.insert(a.begin(), a.end());
-                }
-                antennas[ch].insert(newer);
-            }
-
-            x++;
-        }
-        y++;
-    }
-
-    std::println("{}", nodes.size());
-}
 
 auto find_antinodes(pi older, pi newer) -> std::pair<pi, pi> {
     auto vdiff = std::abs(older.first - newer.first);
@@ -93,6 +62,7 @@ auto find_antinodes(pi older, pi newer) -> std::pair<pi, pi> {
                 {older.first - vdiff, older.second - hdiff}};
     }
 }
+
 
 auto first(std::string s) -> void {
     std::ifstream file(s);
@@ -129,9 +99,45 @@ auto first(std::string s) -> void {
     std::println("{}", results.size());
 }
 
+
+auto second(std::string s) -> void {
+    std::ifstream file(s);
+
+    std::vector<std::vector<char>> g;
+
+    read_lines(file, [&g](std::string line) {
+        g.emplace_back(line.begin(), line.end());
+    });
+    int w = g[0].size();
+    int h = g.size();
+
+    std::unordered_set<pi, pair_hash> nodes;
+    std::unordered_map<char, std::unordered_set<pi, pair_hash>> antennas;
+    int y = 0;
+    for (auto row : g) {
+        int x = 0;
+        for (auto ch : row) {
+            pi newer = {y, x};
+            if (ch != '.') {
+                for (auto older : antennas[ch]) {
+                    auto a = find_harmonics(older, newer, w, h);
+                    nodes.insert(a.begin(), a.end());
+                }
+                antennas[ch].insert(newer);
+            }
+
+            x++;
+        }
+        y++;
+    }
+
+    std::println("{}", nodes.size());
+}
+
+
 auto main(int argc, char* argv[]) -> int {
     std::string filename = aoc(argc, argv, "../inputs/8.txt");
-    // first(filename);
+    first(filename);
     second(filename);
     return 0;
 }
