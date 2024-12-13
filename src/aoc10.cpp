@@ -5,8 +5,7 @@
 
 
 using pi = std::pair<int, int>;
-static const std::array<std::pair<int, int>, 4> D1 = {
-    {{0, 1}, {0, -1}, {1, 0}, {-1, 0}}};
+static const std::array<pi, 4> D1 = {{{0, 1}, {0, -1}, {1, 0}, {-1, 0}}};
 
 
 auto first(std::string s) -> void {
@@ -109,7 +108,7 @@ auto second(std::string s) -> void {
 
 auto main(int argc, char* argv[]) -> int {
     std::string filename = aoc(argc, argv, "../inputs/10.txt");
-    // first(filename);
+    first(filename);
     second(filename);
     return 0;
 }
