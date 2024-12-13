@@ -7,8 +7,7 @@
 using pi = std::pair<long, long>;
 // unwrapped (cost, moves_a, moves_b, x, y)
 using el = std::tuple<long, int, int, long, long>;
-// unwrapped (cost, x, y)
-using el2 = std::tuple<long, long, long>;
+
 
 struct Input {
     pi a, b, prize;
@@ -32,6 +31,7 @@ struct std::formatter<Input> : std::formatter<std::string> {
 };
 
 
+// world, before discovering M A T H
 auto guldens(Input i) -> std::optional<long> {
     std::priority_queue<el, std::vector<el>, std::greater<>> pq;
     // x, y, movea, moveb
