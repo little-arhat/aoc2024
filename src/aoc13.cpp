@@ -4,9 +4,11 @@
 #include <tuple>
 #include "utils.hpp"
 
-using pi = std::pair<int, int>;
+using pi = std::pair<long, long>;
 // unwrapped (cost, moves_a, moves_b, x, y)
-using el = std::tuple<long, int, int, int, int>;
+using el = std::tuple<long, int, int, long, long>;
+// unwrapped (cost, x, y)
+using el2 = std::tuple<long, long, long>;
 
 struct Input {
     pi a, b, prize;
@@ -32,7 +34,8 @@ struct std::formatter<Input> : std::formatter<std::string> {
 
 auto guldens(Input i) -> std::optional<long> {
     std::priority_queue<el, std::vector<el>, std::greater<>> pq;
-    std::unordered_set<std::tuple<int, int, int, int>, tuple_hash> visited;
+    // x, y, movea, moveb
+    std::unordered_set<std::tuple<long, long, long, long>, tuple_hash> visited;
     pq.push({0, 0, 0, 0, 0});
     auto [px, py] = i.prize;
     auto [ax, ay] = i.a;
@@ -66,7 +69,8 @@ auto guldens(Input i) -> std::optional<long> {
 }
 
 
-auto parse_input(const std::string& text) -> std::vector<Input> {
+auto parse_input(const std::string& text,
+                 long prize_correction) -> std::vector<Input> {
     std::vector<Input> result;
     std::regex pattern(
         R"(Button A: X\+(\d+), Y\+(\d+)\s+Button B: X\+(\d+), Y\+(\d+)\s+Prize: X=(\d+), Y=(\d+))");
@@ -76,7 +80,8 @@ auto parse_input(const std::string& text) -> std::vector<Input> {
     while (std::regex_search(start, text.cend(), match, pattern)) {
         result.push_back({{std::stoi(match[1]), std::stoi(match[2])},
                           {std::stoi(match[3]), std::stoi(match[4])},
-                          {std::stoi(match[5]), std::stoi(match[6])}});
+                          {prize_correction + std::stoi(match[5]),
+                           prize_correction + std::stoi(match[6])}});
         start = match.suffix().first;
     }
     return result;
@@ -85,7 +90,7 @@ auto parse_input(const std::string& text) -> std::vector<Input> {
 
 auto first(std::string s) -> void {
     std::string inp = slurp(s);
-    std::vector<Input> i = parse_input(inp);
+    std::vector<Input> i = parse_input(inp, 0);
 
     long tokens = 0;
     for (auto ai : i) {
@@ -99,15 +104,54 @@ auto first(std::string s) -> void {
 }
 
 
+/* def solve_nk_no_lib(tx, ty, ax, ay, bx, by): */
+/*     det = bx * ay - by * ax */
+/*     if det == 0: */
+/*         raise ValueError("System has no integer solution") */
+/*     k = (tx * ay - ty * ax) / det */
+/*     n = (tx - bx * k) / ax */
+/*     return n, k */
+
+auto is_int(double value) -> bool {
+    return std::floor(value) == value;
+}
+
+
+auto guldens_lin(Input inp) -> std::optional<long> {
+    double det = inp.b.first * inp.a.second - inp.b.second * inp.a.first;
+    if (det == 0) {
+        return {};
+    }
+    double k =
+        (inp.prize.first * inp.a.second - inp.prize.second * inp.a.first) / det;
+    double n = (inp.prize.first - inp.b.first * k) / inp.a.first;
+    if (is_int(k) && is_int(n)) {
+        return {static_cast<long>(k) * 1 + static_cast<long>(n) * 3};
+    } else {
+        return {};
+    }
+}
+
+
 auto second(std::string s) -> void {
     std::string inp = slurp(s);
-    std::println("{}", inp.size());
+    std::vector<Input> i = parse_input(inp, 10000000000000);
+
+    long tokens = 0;
+    for (auto ai : i) {
+        auto a = guldens_lin(ai);
+        if (a) {
+            tokens += a.value();
+        }
+    }
+
+    std::println("{}", tokens);
 }
 
 
 auto main(int argc, char* argv[]) -> int {
     std::string filename = aoc(argc, argv, "../inputs/13.txt");
     first(filename);
-    // second(filename);
+    second(filename);
     return 0;
 }
