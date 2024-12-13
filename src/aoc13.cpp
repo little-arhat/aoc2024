@@ -88,22 +88,6 @@ auto parse_input(const std::string& text,
 }
 
 
-auto first(std::string s) -> void {
-    std::string inp = slurp(s);
-    std::vector<Input> i = parse_input(inp, 0);
-
-    long tokens = 0;
-    for (auto ai : i) {
-        auto a = guldens(ai);
-        if (a) {
-            tokens += a.value();
-        }
-    }
-
-    std::println("{}", tokens);
-}
-
-
 auto is_int(double value) -> bool {
     return std::floor(value) == value;
 }
@@ -122,6 +106,22 @@ auto guldens_lin(Input inp) -> std::optional<long> {
     } else {
         return {};
     }
+}
+
+
+auto first(std::string s) -> void {
+    std::string inp = slurp(s);
+    std::vector<Input> i = parse_input(inp, 0);
+
+    long tokens = 0;
+    for (auto ai : i) {
+        auto a = guldens(ai);
+        if (a) {
+            tokens += a.value();
+        }
+    }
+
+    std::println("{}", tokens);
 }
 
 
