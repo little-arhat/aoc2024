@@ -104,14 +104,6 @@ auto first(std::string s) -> void {
 }
 
 
-/* def solve_nk_no_lib(tx, ty, ax, ay, bx, by): */
-/*     det = bx * ay - by * ax */
-/*     if det == 0: */
-/*         raise ValueError("System has no integer solution") */
-/*     k = (tx * ay - ty * ax) / det */
-/*     n = (tx - bx * k) / ax */
-/*     return n, k */
-
 auto is_int(double value) -> bool {
     return std::floor(value) == value;
 }
