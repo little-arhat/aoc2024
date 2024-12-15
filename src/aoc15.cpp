@@ -292,7 +292,7 @@ auto first(std::string s) -> void {
 
 auto main(int argc, char* argv[]) -> int {
     std::string filename = aoc(argc, argv, "../inputs/15.txt");
-    // first(filename);
+    first(filename);
     second(filename);
     return 0;
 }
