@@ -1,9 +1,39 @@
 
+#include <algorithm>
 #include <cmath>
 #include <regex>
 #include "utils.hpp"
 
-// using pi = std::pair<long, long>;
+
+auto mean_var(double new_val,
+              double prev_mean,
+              double prev_var,
+              size_t cur_count) -> std::pair<double, double> {
+    if (cur_count == 1) {
+        return {new_val, 0.0};
+    }
+    double new_mean = prev_mean + (new_val - prev_mean) / cur_count;
+    double new_var = prev_var + ((new_val - prev_mean) * (new_val - new_mean));
+    return {new_mean, new_var};
+}
+
+
+auto mod_pow(long base, long exp, long mod) -> long {
+    long result = 1;
+    base = base % mod;
+    if (exp < 0) {
+        exp = -exp;
+        base = mod_pow(base, mod - 2, mod);
+    }
+    while (exp > 0) {
+        if (exp % 2 == 1) {
+            result = (result * base) % mod;
+        }
+        base = (base * base) % mod;
+        exp /= 2;
+    }
+    return result;
+}
 
 
 auto wrap(int v, int bound) -> int {
@@ -55,47 +85,37 @@ auto parse_input(const std::string& input) -> std::vector<Robot> {
 }
 
 
-auto clear(std::vector<std::string>& g, int width) -> void {
-    for (auto& row : g) {
-        row = std::string(width, ' ');
-    }
-}
-
-auto print(std::vector<std::string>& g, int step) -> void {
-    std::println("\n...STEP: {}....", step);
-    for (const auto& row : g) {
-        std::println("{}", row);
-    }
-    std::println();
-}
-
-
 auto second(std::string s) -> void {
     auto robots = parse_input(slurp(s));
     auto size = robots.back();
     robots.pop_back();
 
-    // manual inspection of the log was performed
-    std::string tmp("0000000000000000000000000000000");
-    std::vector<std::string> grid(size.y, std::string(size.x, ' '));
-    auto found = 0;
-    for (int steps = 1; steps < 10000; steps += 1) {
+    long best_x, best_x_var, best_y, best_y_var;
+    best_y_var = LONG_MAX;
+    best_x_var = LONG_MAX;
+    for (int steps = 1; steps < std::max(size.x, size.y); steps += 1) {
+        double meanx, meany, xvar, yvar;
+        size_t c = 0;
         for (auto r : robots) {
+            c++;
             auto rm = r.move(steps, size.x, size.y);
-            grid[rm.y][rm.x] = '0';
+            std::tie(meanx, xvar) = mean_var(rm.x, meanx, xvar, c);
+            std::tie(meany, yvar) = mean_var(rm.y, meany, yvar, c);
         }
-        int count_lines = 0;
-        for (const auto& row : grid) {
-            if (row.find(tmp) != std::string::npos) {
-                count_lines += 1;
-            }
+        if (xvar < best_x_var) {
+            best_x_var = xvar;
+            best_x = steps;
         }
-        if (count_lines == 2) {
-            print(grid, steps);
-            found = steps;
-            break;
+        if (yvar < best_y_var) {
+            best_y_var = yvar;
+            best_y = steps;
         }
     }
+    // smarts:
+    // https://old.reddit.com/r/adventofcode/comments/1hdvhvu/2024_day_14_solutions/m1zws1g/
+    auto found =
+        best_x +
+        ((mod_pow(size.x, -1, size.y) * (best_y - best_x)) % size.y) * size.x;
 
     std::println("{}", found);
 }
