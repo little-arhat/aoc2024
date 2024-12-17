@@ -112,6 +112,10 @@ auto combo_operand(State& s, uint8_t operand) -> int {
 auto run(State& s, const std::vector<uint8_t>& prog) -> std::vector<int> {
     std::vector<int> r;
     while (s.pc < prog.size() - 1) {
+        std::println("pc={}; prog[pc]={}; prog[pc+1]={}",
+                     s.pc,
+                     prog[s.pc],
+                     prog[s.pc + 1]);
         auto opcode = int_to_opcode(prog[s.pc]);
         auto operand = prog[s.pc + 1];
         std::println("Before; state: {}; opcode={}; operand={}",
@@ -119,22 +123,24 @@ auto run(State& s, const std::vector<uint8_t>& prog) -> std::vector<int> {
                      opcode_to_string(opcode),
                      operand);
 
+        int res = -1;
+        int out = -1;
         switch (opcode) {
             case Opcode::ADV: {
                 int combo_op = combo_operand(s, operand);
                 int denom = std::pow(2, combo_op);
-                int res = s.A / denom;
+                res = s.A / denom;
                 s.A = res;
                 break;
             }
             case Opcode::BXL: {
-                int res = s.B ^ operand;
+                res = s.B ^ operand;
                 s.B = res;
                 break;
             }
             case Opcode::BST: {
                 int combo_op = combo_operand(s, operand);
-                int res = combo_op % 8;
+                res = combo_op % 8;
                 s.B = res;
                 break;
             }
@@ -148,32 +154,36 @@ auto run(State& s, const std::vector<uint8_t>& prog) -> std::vector<int> {
                 break;
             }
             case Opcode::BXC: {
-                int res = s.B ^ s.C;
+                res = s.B ^ s.C;
                 s.B = res;
                 break;
             }
             case Opcode::OUT: {
                 int combo_op = combo_operand(s, operand);
-                r.push_back(combo_op);
+                out = combo_op % 8;
+                r.push_back(out);
                 break;
             }
             case Opcode::BDV: {
                 int combo_op = combo_operand(s, operand);
                 int denom = std::pow(2, combo_op);
-                int res = s.A / denom;
+                res = s.A / denom;
                 s.B = res;
                 break;
             }
             case Opcode::CDV: {
                 int combo_op = combo_operand(s, operand);
                 int denom = std::pow(2, combo_op);
-                int res = s.A / denom;
+                res = s.A / denom;
                 s.C = res;
                 break;
             }
         }
         s.pc += 2;
-        std::println("after op.. state: {}", s.to_string());
+        std::println("after op.. state: {}; res={}; out={}",
+                     s.to_string(),
+                     res,
+                     out);
     }
 
     return r;
@@ -202,7 +212,7 @@ auto first(std::string inp) -> void {
             auto value = sv.substr(12);
             std::from_chars(value.data(), value.data() + value.size(), s.C);
         } else if (sv.starts_with("Program: ")) {
-            auto nums = sv.substr(8);
+            auto nums = sv.substr(9);
             for (auto n : split_gen<uint8_t>(nums, ',')) {
                 prog.push_back(n);
             }
