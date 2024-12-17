@@ -36,13 +36,6 @@ auto mod_pow(long base, long exp, long mod) -> long {
 }
 
 
-auto wrap(int v, int bound) -> int {
-    auto s = sign(v);
-    auto vc = std::abs(v) % bound;
-    return s > 0 || vc == 0 ? vc : bound - vc;
-}
-
-
 struct Robot {
     int x, y, vx, vy;
     auto to_string() const -> const std::string {

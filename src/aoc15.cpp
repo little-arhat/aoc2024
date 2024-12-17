@@ -67,14 +67,12 @@ auto enlarge(const std::string line) -> std::string {
 
 
 auto second(std::string s) -> void {
-    std::ifstream file(s);
-
     std::vector<std::vector<char>> grid;
     std::vector<char> moves;
     pi robot = {-1, -1};  // y, x
     bool have_map = false;
 
-    read_lines(file, [&grid, &have_map, &robot, &moves](std::string line) {
+    read_lines(s, [&grid, &have_map, &robot, &moves](std::string line) {
         if (line.empty()) {
             have_map = true;
             return;  // cont
@@ -205,14 +203,12 @@ auto second(std::string s) -> void {
 
 
 auto first(std::string s) -> void {
-    std::ifstream file(s);
-
     std::vector<std::vector<char>> grid;
     std::vector<char> moves;
     pi robot = {-1, -1};  // y, x
     bool have_map = false;
 
-    read_lines(file, [&grid, &have_map, &robot, &moves](std::string line) {
+    read_lines(s, [&grid, &have_map, &robot, &moves](std::string line) {
         if (line.empty()) {
             have_map = true;
             return;  // cont

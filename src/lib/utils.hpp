@@ -49,12 +49,14 @@ void read_helper(Stream& s, Tuple& args, std::index_sequence<I...>) {
     ((s >> std::get<I>(args)), ...);
 }
 
+
 template <typename Tuple, typename... Actions, std::size_t... I>
 void apply_actions(Tuple& args,
                    std::index_sequence<I...>,
                    Actions&&... actions) {
     (std::forward<Actions>(actions)(std::get<I>(args)), ...);
 }
+
 
 template <typename... Args, typename... Actions>
 auto read_lines(std::ifstream& file, Actions&&... actions) -> void {
@@ -71,6 +73,14 @@ auto read_lines(std::ifstream& file, Actions&&... actions) -> void {
                       std::forward<Actions>(actions)...);
     }
 }
+
+
+template <typename... Args, typename... Actions>
+auto read_lines(const std::string& filename, Actions&&... actions) -> void {
+    std::ifstream file(filename);
+    read_lines<Args...>(file, std::forward<Actions>(actions)...);
+}
+
 
 /// todo: more flexible reading (e.g. read n-tuple, call lambda, sliptchar)
 template <typename Action>
@@ -186,4 +196,24 @@ auto deep_copy(const std::vector<std::vector<T>>& original)
 
 auto digit(char c) -> int {
     return c - '0';
+}
+
+
+using pi = std::pair<int, int>;
+
+
+constexpr pi operator+(const pi& lhs, const pi& rhs) {
+    return {lhs.first + rhs.first, lhs.second + rhs.second};
+}
+
+
+constexpr pi operator-(const pi& lhs, const pi& rhs) {
+    return {lhs.first - rhs.first, lhs.second - rhs.second};
+}
+
+
+auto wrap(int v, int bound) -> int {
+    auto s = sign(v);
+    auto vc = std::abs(v) % bound;
+    return s > 0 || vc == 0 ? vc : bound - vc;
 }

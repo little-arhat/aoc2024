@@ -4,7 +4,6 @@
 #include <tuple>
 #include "utils.hpp"
 
-using pi = std::pair<long, long>;
 // unwrapped (cost, moves_a, moves_b, x, y)
 using el = std::tuple<long, int, int, long, long>;
 
@@ -69,8 +68,8 @@ auto guldens(Input i) -> std::optional<long> {
 }
 
 
-auto parse_input(const std::string& text,
-                 long prize_correction) -> std::vector<Input> {
+auto parse_input(const std::string& text, long prize_correction)
+    -> std::vector<Input> {
     std::vector<Input> result;
     std::regex pattern(
         R"(Button A: X\+(\d+), Y\+(\d+)\s+Button B: X\+(\d+), Y\+(\d+)\s+Prize: X=(\d+), Y=(\d+))");
