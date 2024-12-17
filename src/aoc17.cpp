@@ -28,26 +28,31 @@ auto first(std::string inp) -> void {
     std::vector<int> prog;
 
     read_lines(inp, [&s, &prog](std::string line) {
-        if (line.starts_with("Register A:")) {
-            sscanf(line.c_str(), "Register A: %ld", &s.A);
-        } else if (line.starts_with("Register B:")) {
-            sscanf(line.c_str(), "Register B: %ld", &s.B);
-        } else if (line.starts_with("Register C:")) {
-            sscanf(line.c_str(), "Register C: %ld", &s.C);
-        } else if (line.starts_with("Program:")) {
-            std::string nums = line.substr(9);
-            std::istringstream iss(nums);
-            int value;
-            while (iss >> value) {
-                prog.push_back(value);
-                if (iss.peek() == ',')
-                    iss.ignore();
+        std::string_view sv(line);
+
+        if (sv.starts_with("Register A:")) {
+            auto value = sv.substr(11);
+            std::from_chars(value.data(), value.data() + value.size(), s.A);
+        } else if (sv.starts_with("Register B:")) {
+            auto value = sv.substr(11);
+            std::from_chars(value.data(), value.data() + value.size(), s.B);
+        } else if (sv.starts_with("Register C:")) {
+            auto value = sv.substr(11);
+            std::from_chars(value.data(), value.data() + value.size(), s.C);
+        } else if (sv.starts_with("Program: ")) {
+            auto nums = sv.substr(8);
+            for (auto n : split_gen<int>(nums, ',')) {
+                prog.push_back(n);
             }
         }
     });
 
     // c++ is shit; this clang doesn't do prints properly
     std::println("State: {};", s.to_string());
+    for (auto p : prog) {
+        std::print("{}, ", p);
+    }
+    std::println("");
 }
 
 

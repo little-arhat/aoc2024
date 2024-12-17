@@ -103,7 +103,7 @@ auto yn(T val) -> std::string {
 
 
 template <typename T>
-auto split(const std::string& input, char c) -> std::vector<T> {
+auto split(const std::string_view& input, char c) -> std::vector<T> {
     return std::views::split(input, c) | std::views::transform([](auto&& s) {
                T value;
                std::from_chars(&*s.begin(), &*s.end(), value);
@@ -124,7 +124,7 @@ auto to_pair(const std::string& input, char c) -> std::pair<T, T> {
 }
 
 template <typename T>
-auto split_gen(const std::string& inp, char c) {
+auto split_gen(const std::string_view& inp, char c) {
     return inp | std::views::split(c) | std::views::transform([](auto&& part) {
                T value;
                std::from_chars(&*part.begin(), &*part.end(), value);
@@ -145,7 +145,8 @@ std::ostream& print_container(std::ostream& os,
 
 template <typename K,
           typename V,
-          template <typename, typename, typename...> class Map>
+          template <typename, typename, typename...>
+          class Map>
 std::ostream& print_map(std::ostream& os,
                         const Map<K, V>& m,
                         const char* sep = ", ") {
