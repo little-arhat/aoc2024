@@ -23,7 +23,7 @@ void print_grid(const std::vector<std::vector<char>>& grid, bool clear) {
     for (size_t cc = 0; cc < grid[0].size(); cc++) {
         std::print("{}", cc % 10);
     }
-    std::println();
+    std::println("");
 
     for (const auto& row : grid) {
         std::print("{}", rr % 10);
@@ -39,7 +39,7 @@ void print_grid(const std::vector<std::vector<char>>& grid, bool clear) {
                 std::print("{}", cell);
             }
         }
-        std::println();
+        std::println("");
     }
     std::cout.flush();
 }
