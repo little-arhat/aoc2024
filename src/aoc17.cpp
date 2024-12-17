@@ -2,6 +2,14 @@
 #include "utils.hpp"
 
 
+// hm
+/* >>> reduce(lambda acc, el: (acc + int(el)) * 8,
+ * reversed("2,4,1,2,7,5,4,7,1,3,5,5,0,3,3,0".split(",")), 0) */
+/* 119137285677840 */
+/* >>> reduce(lambda acc, el: (acc + int(el)) * 8,
+ * reversed("0,3,5,4,3,0".split(",")), 0) */
+/* 117440 */
+
 enum class Opcode : uint8_t {
     /* The adv instruction (opcode 0) performs division. The numerator is the
      * value in the A register. The denominator is found by raising 2 to the
@@ -112,16 +120,12 @@ auto combo_operand(State& s, uint8_t operand) -> int {
 auto run(State& s, const std::vector<uint8_t>& prog) -> std::vector<int> {
     std::vector<int> r;
     while (s.pc < prog.size() - 1) {
-        std::println("pc={}; prog[pc]={}; prog[pc+1]={}",
-                     s.pc,
-                     prog[s.pc],
-                     prog[s.pc + 1]);
         auto opcode = int_to_opcode(prog[s.pc]);
         auto operand = prog[s.pc + 1];
-        std::println("Before; state: {}; opcode={}; operand={}",
-                     s.to_string(),
-                     opcode_to_string(opcode),
-                     operand);
+        std::print("{}; opcode={}; operand={};...",
+                   s.to_string(),
+                   opcode_to_string(opcode),
+                   operand);
 
         int res = -1;
         int out = -1;
@@ -148,7 +152,7 @@ auto run(State& s, const std::vector<uint8_t>& prog) -> std::vector<int> {
                 if (s.A != 0) {
                     s.pc = operand;
                     // skip pc+=2
-                    std::println("after op.. state: {}..jump", s.to_string());
+                    std::println("JUMP; state: {}", s.to_string());
                     continue;
                 }
                 break;
@@ -180,10 +184,7 @@ auto run(State& s, const std::vector<uint8_t>& prog) -> std::vector<int> {
             }
         }
         s.pc += 2;
-        std::println("after op.. state: {}; res={}; out={}",
-                     s.to_string(),
-                     res,
-                     out);
+        std::println("res={}; out={}; => state={}", res, out, s.to_string());
     }
 
     return r;
