@@ -145,8 +145,7 @@ std::ostream& print_container(std::ostream& os,
 
 template <typename K,
           typename V,
-          template <typename, typename, typename...>
-          class Map>
+          template <typename, typename, typename...> class Map>
 std::ostream& print_map(std::ostream& os,
                         const Map<K, V>& m,
                         const char* sep = ", ") {
@@ -154,6 +153,20 @@ std::ostream& print_map(std::ostream& os,
     for (auto it = m.begin(); it != m.end(); ++it)
         os << (it == m.begin() ? "" : sep) << it->first << ':' << it->second;
     return os << '}';
+}
+
+
+template <typename T>
+auto join_str(const std::vector<T>& vec, char delimiter) -> std::string {
+    std::ostringstream oss;
+    for (auto&& val :
+         vec | std::views::transform([](T i) { return std::to_string(i); })) {
+        oss << val << delimiter;
+    }
+    std::string result = oss.str();
+    if (!result.empty())
+        result.pop_back();
+    return result;
 }
 
 

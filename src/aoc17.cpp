@@ -1,11 +1,7 @@
 
 #include "utils.hpp"
 
-
 // hm
-/* >>> reduce(lambda acc, el: (acc + int(el)) * 8,
- * reversed("2,4,1,2,7,5,4,7,1,3,5,5,0,3,3,0".split(",")), 0) */
-/* 119137285677840 */
 /* >>> reduce(lambda acc, el: (acc + int(el)) * 8,
  * reversed("0,3,5,4,3,0".split(",")), 0) */
 /* 117440 */
@@ -98,7 +94,7 @@ struct std::formatter<State> : std::formatter<std::string> {
 };
 
 
-auto combo_operand(State& s, uint8_t operand) -> int {
+auto combo_operand(State& s, uint8_t operand) -> long {
     switch (operand) {
         case 0:
         case 1:
@@ -117,22 +113,18 @@ auto combo_operand(State& s, uint8_t operand) -> int {
 }
 
 
-auto run(State& s, const std::vector<uint8_t>& prog) -> std::vector<int> {
-    std::vector<int> r;
+auto run(State& s, const std::vector<uint8_t>& prog) -> std::vector<uint8_t> {
+    std::vector<uint8_t> r;
     while (s.pc < prog.size() - 1) {
         auto opcode = int_to_opcode(prog[s.pc]);
         auto operand = prog[s.pc + 1];
-        std::print("{}; opcode={}; operand={};...",
-                   s.to_string(),
-                   opcode_to_string(opcode),
-                   operand);
-
-        int res = -1;
+        long res = -1;
         int out = -1;
+        long combo_op = -1;
         switch (opcode) {
             case Opcode::ADV: {
-                int combo_op = combo_operand(s, operand);
-                int denom = std::pow(2, combo_op);
+                combo_op = combo_operand(s, operand);
+                long denom = std::pow(2, combo_op);
                 res = s.A / denom;
                 s.A = res;
                 break;
@@ -143,7 +135,7 @@ auto run(State& s, const std::vector<uint8_t>& prog) -> std::vector<int> {
                 break;
             }
             case Opcode::BST: {
-                int combo_op = combo_operand(s, operand);
+                combo_op = combo_operand(s, operand);
                 res = combo_op % 8;
                 s.B = res;
                 break;
@@ -151,8 +143,6 @@ auto run(State& s, const std::vector<uint8_t>& prog) -> std::vector<int> {
             case Opcode::JNZ: {
                 if (s.A != 0) {
                     s.pc = operand;
-                    // skip pc+=2
-                    std::println("JUMP; state: {}", s.to_string());
                     continue;
                 }
                 break;
@@ -163,36 +153,98 @@ auto run(State& s, const std::vector<uint8_t>& prog) -> std::vector<int> {
                 break;
             }
             case Opcode::OUT: {
-                int combo_op = combo_operand(s, operand);
+                combo_op = combo_operand(s, operand);
                 out = combo_op % 8;
                 r.push_back(out);
                 break;
             }
             case Opcode::BDV: {
-                int combo_op = combo_operand(s, operand);
-                int denom = std::pow(2, combo_op);
+                combo_op = combo_operand(s, operand);
+                long denom = std::pow(2, combo_op);
                 res = s.A / denom;
                 s.B = res;
                 break;
             }
             case Opcode::CDV: {
-                int combo_op = combo_operand(s, operand);
-                int denom = std::pow(2, combo_op);
+                combo_op = combo_operand(s, operand);
+                long denom = std::pow(2, combo_op);
                 res = s.A / denom;
                 s.C = res;
                 break;
             }
         }
         s.pc += 2;
-        std::println("res={}; out={}; => state={}", res, out, s.to_string());
     }
 
     return r;
 }
 
 
-auto second(std::string s) -> void {
-    std::println("{}", s);
+template <typename T>
+auto same(const std::vector<T>& a, const std::vector<T>& b) -> bool {
+    return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin());
+}
+
+
+template <typename T>
+auto same(const std::vector<T>& a, size_t last_of, const std::vector<T>& b)
+    -> bool {
+    return a.size() == last_of &&
+           std::equal(b.end() - last_of, b.end(), a.begin());
+}
+
+
+auto hack(State& s, const std::vector<uint8_t> prog) -> long {
+    long as = LONG_MAX;
+
+    std::vector<std::pair<long, int>> ags;
+    ags.push_back({0, 1});
+
+    while (!ags.empty()) {
+        auto [a_guess, digit] = ags.back();
+        ags.pop_back();
+        for (auto i = 0; i < 8; i++) {
+            auto a_n = a_guess * 8 + i;
+            State t{a_n, s.B, s.C, 0};
+            std::vector<uint8_t> res = run(t, prog);
+            if (same(res, prog)) {
+                as = std::min(a_n, as);
+            } else if (same(res, digit, prog)) {
+                ags.push_back({a_n, digit + 1});
+            }
+        }
+    }
+
+    return as;
+}
+
+
+auto second(std::string inp) -> void {
+    State s{0, 0, 0, 0};
+    std::vector<uint8_t> prog;
+
+    read_lines(inp, [&s, &prog](std::string line) {
+        std::string_view sv(line);
+
+        if (sv.starts_with("Register A: ")) {
+            auto value = sv.substr(12);
+            std::from_chars(value.data(), value.data() + value.size(), s.A);
+        } else if (sv.starts_with("Register B: ")) {
+            auto value = sv.substr(12);
+            std::from_chars(value.data(), value.data() + value.size(), s.B);
+        } else if (sv.starts_with("Register C: ")) {
+            auto value = sv.substr(12);
+            std::from_chars(value.data(), value.data() + value.size(), s.C);
+        } else if (sv.starts_with("Program: ")) {
+            auto nums = sv.substr(9);
+            for (auto n : split_gen<uint8_t>(nums, ',')) {
+                prog.push_back(n);
+            }
+        }
+    });
+
+    auto ra = hack(s, prog);
+    std::println("{}", ra);
 }
 
 
@@ -220,20 +272,14 @@ auto first(std::string inp) -> void {
         }
     });
 
-    std::println("Begin with state: {};", s.to_string());
     auto r = run(s, prog);
-
-    std::println("end with state: {};", s.to_string());
-    for (auto p : r) {
-        std::print("{},", p);
-    }
-    std::println("");
+    std::println("{}", join_str(r, ','));
 }
 
 
 auto main(int argc, char* argv[]) -> int {
     std::string filename = aoc(argc, argv, "../inputs/17.txt");
     first(filename);
-    //    second(filename);
+    second(filename);
     return 0;
 }
