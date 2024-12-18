@@ -2,9 +2,9 @@
 #include "utils.hpp"
 
 // hm
-/* >>> reduce(lambda acc, el: (acc + int(el)) * 8,
- * reversed("0,3,5,4,3,0".split(",")), 0) */
-/* 117440 */
+// >>> reduce(lambda acc, el: (acc + int(el)) * 8,
+//            reversed("0,3,5,4,3,0".split(",")), 0)
+// 117440
 
 enum class Opcode : uint8_t {
     /* The adv instruction (opcode 0) performs division. The numerator is the
