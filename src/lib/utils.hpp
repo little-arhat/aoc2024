@@ -82,7 +82,6 @@ auto read_lines(const std::string& filename, Actions&&... actions) -> void {
 }
 
 
-/// todo: more flexible reading (e.g. read n-tuple, call lambda, sliptchar)
 template <typename Action>
 auto read_lines(std::ifstream& file, Action action) -> void {
     std::string line;
@@ -111,6 +110,7 @@ auto split(const std::string_view& input, char c) -> std::vector<T> {
            }) |
            std::ranges::to<std::vector<int>>();
 }
+
 
 template <typename T>
 auto to_pair(const std::string& input, char c) -> std::pair<T, T> {
@@ -145,7 +145,8 @@ std::ostream& print_container(std::ostream& os,
 
 template <typename K,
           typename V,
-          template <typename, typename, typename...> class Map>
+          template <typename, typename, typename...>
+          class Map>
 std::ostream& print_map(std::ostream& os,
                         const Map<K, V>& m,
                         const char* sep = ", ") {
