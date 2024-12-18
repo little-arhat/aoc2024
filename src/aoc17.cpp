@@ -118,26 +118,18 @@ auto run(State& s, const std::vector<uint8_t>& prog) -> std::vector<uint8_t> {
     while (s.pc < prog.size() - 1) {
         auto opcode = int_to_opcode(prog[s.pc]);
         auto operand = prog[s.pc + 1];
-        long res = -1;
-        int out = -1;
-        long combo_op = -1;
         switch (opcode) {
             case Opcode::ADV: {
-                combo_op = combo_operand(s, operand);
-                long denom = std::pow(2, combo_op);
-                res = s.A / denom;
-                s.A = res;
+                s.A = s.A /
+                      static_cast<long>(std::pow(2, combo_operand(s, operand)));
                 break;
             }
             case Opcode::BXL: {
-                res = s.B ^ operand;
-                s.B = res;
+                s.B = s.B ^ operand;
                 break;
             }
             case Opcode::BST: {
-                combo_op = combo_operand(s, operand);
-                res = combo_op % 8;
-                s.B = res;
+                s.B = combo_operand(s, operand) % 8;
                 break;
             }
             case Opcode::JNZ: {
@@ -148,28 +140,21 @@ auto run(State& s, const std::vector<uint8_t>& prog) -> std::vector<uint8_t> {
                 break;
             }
             case Opcode::BXC: {
-                res = s.B ^ s.C;
-                s.B = res;
+                s.B = s.B ^ s.C;
                 break;
             }
             case Opcode::OUT: {
-                combo_op = combo_operand(s, operand);
-                out = combo_op % 8;
-                r.push_back(out);
+                r.push_back(combo_operand(s, operand) % 8);
                 break;
             }
             case Opcode::BDV: {
-                combo_op = combo_operand(s, operand);
-                long denom = std::pow(2, combo_op);
-                res = s.A / denom;
-                s.B = res;
+                s.B = s.A /
+                      static_cast<long>(std::pow(2, combo_operand(s, operand)));
                 break;
             }
             case Opcode::CDV: {
-                combo_op = combo_operand(s, operand);
-                long denom = std::pow(2, combo_op);
-                res = s.A / denom;
-                s.C = res;
+                s.C = s.A /
+                      static_cast<long>(std::pow(2, combo_operand(s, operand)));
                 break;
             }
         }
@@ -187,8 +172,9 @@ auto same(const std::vector<T>& a, const std::vector<T>& b) -> bool {
 
 
 template <typename T>
-auto same(const std::vector<T>& a, size_t last_of, const std::vector<T>& b)
-    -> bool {
+auto same(const std::vector<T>& a,
+          size_t last_of,
+          const std::vector<T>& b) -> bool {
     return a.size() == last_of &&
            std::equal(b.end() - last_of, b.end(), a.begin());
 }
