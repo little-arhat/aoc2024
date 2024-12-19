@@ -157,11 +157,12 @@ std::ostream& print_map(std::ostream& os,
 }
 
 
-template <typename T>
-auto join_str(const std::vector<T>& vec, char delimiter) -> std::string {
+template <typename Container>
+auto join_str(const Container& container, char delimiter) -> std::string {
     std::ostringstream oss;
-    for (auto&& val :
-         vec | std::views::transform([](T i) { return std::to_string(i); })) {
+    for (auto&& val : container | std::views::transform([](auto&& i) {
+                          return std::to_string(i);
+                      })) {
         oss << val << delimiter;
     }
     std::string result = oss.str();
