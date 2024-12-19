@@ -1,9 +1,11 @@
 
+#include <utility>
 #include "utils.hpp"
 
 
-auto can_fold_numbers(const std::string& design,
-                      const std::unordered_set<std::string>& towels) -> long {
+template <typename H, typename E>
+auto can_fold(const std::string_view& design,
+              const std::unordered_set<std::string, H, E>& towels) -> long {
     std::vector<long> dp(design.size() + 1, 0);
     dp[0] = 1;
     for (size_t i = 1; i < design.size() + 1; i++) {
@@ -17,38 +19,19 @@ auto can_fold_numbers(const std::string& design,
 }
 
 
-auto can_fold(const std::string& design,
-              const std::unordered_set<std::string>& towels) -> bool {
-    std::vector<bool> dp(design.size() + 1, false);
-    dp[0] = true;
-    for (size_t i = 1; i < design.size() + 1; i++) {
-        for (size_t j = 0; j < i; j++) {
-            if (dp[j] && towels.contains(design.substr(j, i - j))) {
-                dp[i] = true;
-                break;
-            }
-        }
-    }
-    return dp[design.size()];
-}
-
-
 auto second(std::string s) -> void {
-    std::unordered_set<std::string> towels;
+    std::unordered_set<std::string, universal_string_hash, std::equal_to<>>
+        towels;
     long possible = 0;
     read_lines(s, [&towels, &possible](std::string line) {
         if (towels.empty()) {
-            std::string r{line};
-            r.erase(std::remove(r.begin(), r.end(), ' '), r.end());
-            auto v = r | std::views::split(',') |
+            auto v = std::views::split(line, std::string_view(", ")) |
                      std::views::transform([](auto&& range) {
                          return std::string(range.begin(), range.end());
                      });
-
-            std::ranges::copy(v, std::inserter(towels, towels.end()));
-
+            towels.insert(v.begin(), v.end());
         } else if (!line.empty()) {
-            possible += can_fold_numbers(line, towels);
+            possible += can_fold(line, towels);
         }
     });
 
@@ -57,23 +40,18 @@ auto second(std::string s) -> void {
 
 
 auto first(std::string s) -> void {
-    std::unordered_set<std::string> towels;
+    std::unordered_set<std::string, universal_string_hash, std::equal_to<>>
+        towels;
     long possible = 0;
     read_lines(s, [&towels, &possible](std::string line) {
         if (towels.empty()) {
-            std::string r{line};
-            r.erase(std::remove(r.begin(), r.end(), ' '), r.end());
-            auto v = r | std::views::split(',') |
+            auto v = std::views::split(line, std::string_view(", ")) |
                      std::views::transform([](auto&& range) {
                          return std::string(range.begin(), range.end());
                      });
-
-            std::ranges::copy(v, std::inserter(towels, towels.end()));
-
+            towels.insert(v.begin(), v.end());
         } else if (!line.empty()) {
-            if (can_fold(line, towels)) {
-                possible += 1;
-            }
+            possible += std::cmp_greater(can_fold(line, towels), 0);
         }
     });
 

@@ -145,8 +145,7 @@ std::ostream& print_container(std::ostream& os,
 
 template <typename K,
           typename V,
-          template <typename, typename, typename...>
-          class Map>
+          template <typename, typename, typename...> class Map>
 std::ostream& print_map(std::ostream& os,
                         const Map<K, V>& m,
                         const char* sep = ", ") {
@@ -233,3 +232,12 @@ auto wrap(int v, int bound) -> int {
     auto vc = std::abs(v) % bound;
     return s > 0 || vc == 0 ? vc : bound - vc;
 }
+
+
+template <typename... Bases>
+struct overload : Bases... {
+    using is_transparent = void;
+    using Bases::operator()...;
+};
+using universal_string_hash =
+    overload<std::hash<std::string>, std::hash<std::string_view>>;
