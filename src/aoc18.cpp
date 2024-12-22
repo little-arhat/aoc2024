@@ -15,9 +15,8 @@ auto can_move(std::vector<std::vector<char>>& g, pi pos, pi dir) {
 }
 
 
-auto dutch_walk_no_star(std::vector<std::vector<char>>& grid,
-                        pi start,
-                        pi end) -> long {
+auto dutch_walk_no_star(std::vector<std::vector<char>>& grid, pi start, pi end)
+    -> long {
     // cost, pos
     std::priority_queue<std::tuple<long, pi>,
                         std::vector<std::tuple<long, pi>>,
@@ -33,9 +32,6 @@ auto dutch_walk_no_star(std::vector<std::vector<char>>& grid,
         pq.pop();
         if (pos == end) {
             return cost;
-        }
-        if (visited.contains(pos) && cost > visited[pos]) {
-            continue;
         }
         for (auto dir : DIRS) {
             auto new_cost = cost + 1;

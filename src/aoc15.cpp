@@ -231,13 +231,6 @@ auto first(std::string s) -> void {
         auto nx = rx + dx;
         auto ny = ry + dy;
 
-        // print_grid(grid);
-        // std::println("Move: {}; r={}. obj={}; press to move",
-        //              move,
-        //              robot,
-        //              grid[ny][nx]);
-        // std::cin.get();
-
         if (grid[ny][nx] == '#') {
             /// nothing happens, we just stay
         } else if (grid[ny][nx] == '.') {

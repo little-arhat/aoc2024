@@ -171,6 +171,16 @@ auto join_str(const Container& container, char delimiter) -> std::string {
 }
 
 
+template <typename Container>
+auto join_str(const Container& container) -> std::string {
+    std::ostringstream oss;
+    for (auto&& val : container) {
+        oss << val;
+    }
+    return oss.str();
+}
+
+
 template <typename T, typename Y>
 constexpr bool operator==(const std::pair<T, Y>& lhs,
                           const std::pair<T, Y>& rhs) {
@@ -217,13 +227,24 @@ auto digit(char c) -> int {
 using pi = std::pair<int, int>;
 
 
-constexpr pi operator+(const pi& lhs, const pi& rhs) {
+constexpr auto operator+(const pi& lhs, const pi& rhs) -> pi {
     return {lhs.first + rhs.first, lhs.second + rhs.second};
 }
 
 
-constexpr pi operator-(const pi& lhs, const pi& rhs) {
+constexpr auto operator*(const pi& lhs, long scale) -> pi {
+    return {lhs.first * scale, lhs.second * scale};
+}
+
+
+constexpr auto operator-(const pi& lhs, const pi& rhs) -> pi {
     return {lhs.first - rhs.first, lhs.second - rhs.second};
+}
+
+
+constexpr auto manhattan(const pi& from, const pi& to) -> long {
+    auto [dy, dx] = to - from;
+    return std::abs(dy) + std::abs(dx);
 }
 
 
