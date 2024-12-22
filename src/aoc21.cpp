@@ -104,31 +104,34 @@ auto num_pad(const std::string& code) -> std::string {
 }
 
 
+/// Non-dumb version, that attempts to find only the best part didn't work
+/// in gold task, so here we are resorting to branching.
 auto pad_step_dumb(const char from,
                    const char to,
                    const std::unordered_map<char, std::pair<int, int>>& pad_map,
                    const std::pair<int, int> gap)
     -> std::pair<std::string, std::string> {
+    // no zig-zags
     auto [st_y, st_x] = pad_map.at(from);
     auto [e_y, e_x] = pad_map.at(to);
     auto dy = e_y - st_y;
     auto dx = e_x - st_x;
+
+    // vert then hor
     std::string r1;
-    std::string r2;
     r1.reserve(std::abs(dy) + std::abs(dx) + 1);
-    r2.reserve(std::abs(dy) + std::abs(dx) + 1);
-
-    auto ud = dy > 0 ? 'v' : '^';
-    auto lr = dx > 0 ? '>' : '<';
-
-    ins(r1, dy, ud);
-    ins(r1, dx, lr);
+    ins(r1, dy, dy > 0 ? 'v' : '^');
+    ins(r1, dx, dx > 0 ? '>' : '<');
     r1.push_back('A');
 
-    ins(r2, dx, lr);
-    ins(r2, dy, ud);
+    // hor then vert
+    std::string r2;
+    r2.reserve(std::abs(dy) + std::abs(dx) + 1);
+    ins(r2, dx, dx > 0 ? '>' : '<');
+    ins(r2, dy, dy > 0 ? 'v' : '^');
     r2.push_back('A');
 
+    // but only if no gap in hor/ver line
     return {
         std::make_pair(e_y, st_x) != gap ? r1 : NO_GAP_PLEASE,
         std::make_pair(st_y, e_x) != gap ? r2 : NO_GAP_PLEASE,
