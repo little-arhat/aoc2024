@@ -2,10 +2,13 @@
 #include <algorithm>
 #include "utils.hpp"
 
+using str = std::string;
+using strset = std::unordered_set<str>;
+using graph = std::unordered_map<str, std::unordered_set<str>>;
 
 struct array_cmp {
-    bool operator()(const std::array<std::string, 3>& lhs,
-                    const std::array<std::string, 3>& rhs) const {
+    bool operator()(const std::array<str, 3>& lhs,
+                    const std::array<str, 3>& rhs) const {
         return lhs < rhs;
     }
 };
@@ -18,58 +21,91 @@ auto st3(T a, T b, T c) -> std::array<T, 3> {
     return arr;
 }
 
-auto chief(const std::string& s) -> bool {
+auto chief(const str& s) -> bool {
     return s[0] == 't';
 }
 
 
-auto second(std::string s) {
-    std::unordered_map<std::string, std::unordered_set<std::string>> v;
-    read_lines(s, [&v](std::string line) {
-        auto pos = line.find('-');
-        auto f = line.substr(0, pos);
-        auto t = line.substr(pos + 1);
-        v[f].insert(t);
-        // v[f].insert(f);  // simplify later
-        v[t].insert(f);
-        // v[t].insert(t);
-    });
-
-    std::vector<std::unordered_set<std::string>> parties;
-    std::print("{{");
-    for (auto& [el, ns] : v) {
-        std::println("'{}': '{}',", el, join_str(ns, ','));
-
-        std::unordered_set<std::string> party;
-        for (auto& [o, os] : v) {
-            if (o != el) {
-                std::set_intersection(ns.begin(),
-                                      ns.end(),
-                                      os.begin(),
-                                      os.end(),
-                                      std::inserter(party, party.begin()));
-            }
-        }
-        parties.push_back(party);
-    }
-    std::println("}}");
-
-    auto best = parties[0];
-    for (auto& p : parties) {
-        std::println("{}: {}", p.size(), join_str(p, ','));
-        if (p.size() > best.size()) {
-            best = p;
-        }
-    }
-
-    std::println("{}", join_str(best, ','));
+template <typename K, typename V>
+auto keys(const std::unordered_map<K, V>& map) -> std::unordered_set<K> {
+    return std::unordered_set<K>(std::ranges::views::keys(map).begin(),
+                                 std::ranges::views::keys(map).end());
 }
 
 
-auto first(std::string s) {
-    std::unordered_map<std::string, std::unordered_set<std::string>> v;
-    std::vector<std::pair<std::string, std::string>> e;
-    read_lines(s, [&v, &e](std::string line) {
+auto intersection(const strset& a, const strset& b) -> strset {
+    strset r;
+    for (auto x : a) {
+        if (b.contains(x)) {
+            r.insert(x);
+        }
+    }
+    return r;
+}
+
+
+auto bron_kerbosch(strset current,
+                   strset nodes,
+                   strset excluded,
+                   graph& graph,
+                   std::vector<strset>& result) -> void {
+    if (nodes.empty() && excluded.empty()) {
+        result.push_back(current);
+        return;
+    }
+
+    for (auto it = nodes.begin(); it != nodes.end();) {
+        auto node = *it;
+
+        strset current_prime{current};
+        current_prime.insert(node);
+        auto connections = graph[node];
+        strset nodes_prime = intersection(nodes, connections);
+        strset excluded_prime = intersection(excluded, connections);
+
+        bron_kerbosch(current_prime,
+                      nodes_prime,
+                      excluded_prime,
+                      graph,
+                      result);
+
+        it = nodes.erase(it);
+        excluded.insert(node);
+    }
+}
+
+
+auto largest_clique(graph& g) -> strset {
+    std::vector<strset> cliques;
+    bron_kerbosch({}, keys(g), {}, g, cliques);
+    auto a = std::max_element(
+        cliques.begin(),
+        cliques.end(),
+        [](strset& a, strset& b) { return a.size() < b.size(); });
+    return *a;
+}
+
+
+auto second(str s) {
+    graph g;
+    read_lines(s, [&g](str line) {
+        auto pos = line.find('-');
+        auto f = line.substr(0, pos);
+        auto t = line.substr(pos + 1);
+        g[f].insert(t);
+        g[t].insert(f);
+    });
+
+    auto largest = largest_clique(g);
+    std::set<str> password{largest.begin(), largest.end()};
+    std::println("{}", join_str(password, ','));
+}
+
+
+auto first(str s) {
+    graph v;
+    std::vector<std::pair<str, str>> e;
+    read_lines(s, [&v, &e](str line) {
         auto pos = line.find('-');
         auto f = line.substr(0, pos);
         auto t = line.substr(pos + 1);
@@ -78,7 +114,7 @@ auto first(std::string s) {
         v[t].insert(f);
     });
 
-    std::unordered_set<std::array<std::string, 3>, array_hash> triangles;
+    std::unordered_set<std::array<str, 3>, array_hash> triangles;
     for (auto [f, t] : e) {
         if (!chief(f) && !chief(t)) {
             continue;
@@ -100,7 +136,7 @@ auto first(std::string s) {
 
 
 auto main(int argc, char* argv[]) -> int {
-    std::string filename = aoc(argc, argv, "../inputs/23.txt");
+    str filename = aoc(argc, argv, "../inputs/23.txt");
     // first(filename);
     second(filename);
     return 0;
