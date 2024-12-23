@@ -1,5 +1,6 @@
 
 #include <algorithm>
+#include <random>
 #include "utils.hpp"
 
 using str = std::string;
@@ -44,27 +45,60 @@ auto intersection(const strset& a, const strset& b) -> strset {
 }
 
 
-auto bron_kerbosch(strset R,
+// union is a keyw
+auto join(const strset& a, const strset& b) -> strset {
+    strset r{a.begin(), a.end()};
+    r.insert(b.begin(), b.end());
+    return r;
+}
+
+
+auto difference(const strset& left, const strset& right) -> strset {
+    strset r;
+    for (auto x : left) {
+        if (!right.contains(x)) {
+            r.insert(x);
+        }
+    }
+    return r;
+}
+
+
+// all nodes have the same degrees, so we just pick random
+auto pivot(const strset& P, const strset& X) -> str {
+    auto T = P.empty() ? X : P;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<size_t> dist(0, T.size() - 1);
+
+    auto it = T.begin();
+    std::advance(it, dist(gen));
+    return *it;
+}
+
+
+auto bron_kerbosch(const strset R,
                    strset P,
                    strset X,
-                   graph& graph,
+                   const graph& graph,
                    std::vector<strset>& result) -> void {
     if (P.empty() && X.empty()) {
         result.push_back(R);
         return;
     }
 
-    for (auto it = P.begin(); it != P.end();) {
+    auto diff = difference(P, graph.at(pivot(P, X)));
+    for (auto it = diff.begin(); it != diff.end(); it++) {
         auto node = *it;
-        auto connections = graph[node];
+        auto connections = graph.at(node);
 
-        bron_kerbosch(intersection(R, {node}),
+        bron_kerbosch(join(R, {node}),
                       intersection(P, connections),
                       intersection(X, connections),
                       graph,
                       result);
 
-        it = P.erase(it);
+        P.erase(node);
         X.insert(node);
     }
 }
