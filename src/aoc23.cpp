@@ -44,33 +44,28 @@ auto intersection(const strset& a, const strset& b) -> strset {
 }
 
 
-auto bron_kerbosch(strset current,
-                   strset nodes,
-                   strset excluded,
+auto bron_kerbosch(strset R,
+                   strset P,
+                   strset X,
                    graph& graph,
                    std::vector<strset>& result) -> void {
-    if (nodes.empty() && excluded.empty()) {
-        result.push_back(current);
+    if (P.empty() && X.empty()) {
+        result.push_back(R);
         return;
     }
 
-    for (auto it = nodes.begin(); it != nodes.end();) {
+    for (auto it = P.begin(); it != P.end();) {
         auto node = *it;
-
-        strset current_prime{current};
-        current_prime.insert(node);
         auto connections = graph[node];
-        strset nodes_prime = intersection(nodes, connections);
-        strset excluded_prime = intersection(excluded, connections);
 
-        bron_kerbosch(current_prime,
-                      nodes_prime,
-                      excluded_prime,
+        bron_kerbosch(intersection(R, {node}),
+                      intersection(P, connections),
+                      intersection(X, connections),
                       graph,
                       result);
 
-        it = nodes.erase(it);
-        excluded.insert(node);
+        it = P.erase(it);
+        X.insert(node);
     }
 }
 
@@ -137,7 +132,7 @@ auto first(str s) {
 
 auto main(int argc, char* argv[]) -> int {
     str filename = aoc(argc, argv, "../inputs/23.txt");
-    // first(filename);
+    first(filename);
     second(filename);
     return 0;
 }
