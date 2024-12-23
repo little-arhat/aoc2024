@@ -24,7 +24,45 @@ auto chief(const std::string& s) -> bool {
 
 
 auto second(std::string s) {
-    std::println("{}", s);
+    std::unordered_map<std::string, std::unordered_set<std::string>> v;
+    read_lines(s, [&v](std::string line) {
+        auto pos = line.find('-');
+        auto f = line.substr(0, pos);
+        auto t = line.substr(pos + 1);
+        v[f].insert(t);
+        // v[f].insert(f);  // simplify later
+        v[t].insert(f);
+        // v[t].insert(t);
+    });
+
+    std::vector<std::unordered_set<std::string>> parties;
+    std::print("{{");
+    for (auto& [el, ns] : v) {
+        std::println("'{}': '{}',", el, join_str(ns, ','));
+
+        std::unordered_set<std::string> party;
+        for (auto& [o, os] : v) {
+            if (o != el) {
+                std::set_intersection(ns.begin(),
+                                      ns.end(),
+                                      os.begin(),
+                                      os.end(),
+                                      std::inserter(party, party.begin()));
+            }
+        }
+        parties.push_back(party);
+    }
+    std::println("}}");
+
+    auto best = parties[0];
+    for (auto& p : parties) {
+        std::println("{}: {}", p.size(), join_str(p, ','));
+        if (p.size() > best.size()) {
+            best = p;
+        }
+    }
+
+    std::println("{}", join_str(best, ','));
 }
 
 
@@ -63,7 +101,7 @@ auto first(std::string s) {
 
 auto main(int argc, char* argv[]) -> int {
     std::string filename = aoc(argc, argv, "../inputs/23.txt");
-    first(filename);
+    // first(filename);
     second(filename);
     return 0;
 }

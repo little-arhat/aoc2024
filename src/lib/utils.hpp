@@ -160,9 +160,7 @@ std::ostream& print_map(std::ostream& os,
 template <typename Container>
 auto join_str(const Container& container, char delimiter) -> std::string {
     std::ostringstream oss;
-    for (auto&& val : container | std::views::transform([](auto&& i) {
-                          return std::to_string(i);
-                      })) {
+    for (auto&& val : container) {
         oss << val << delimiter;
     }
     std::string result = oss.str();
