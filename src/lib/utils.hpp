@@ -145,7 +145,8 @@ std::ostream& print_container(std::ostream& os,
 
 template <typename K,
           typename V,
-          template <typename, typename, typename...> class Map>
+          template <typename, typename, typename...>
+          class Map>
 std::ostream& print_map(std::ostream& os,
                         const Map<K, V>& m,
                         const char* sep = ", ") {
@@ -199,6 +200,22 @@ struct pair_hash {
 struct tuple_hash {
     template <typename... Args>
     auto operator()(const std::tuple<Args...>& t) const -> std::size_t {
+        return std::apply(
+            [](const auto&... elems) {
+                std::size_t seed = 0;
+                ((seed ^= std::hash<std::decay_t<decltype(elems)>>{}(elems) +
+                          0x9e3779b9 + (seed << 6) + (seed >> 2)),
+                 ...);
+                return seed;
+            },
+            t);
+    }
+};
+
+
+struct array_hash {
+    template <typename T, size_t N>
+    auto operator()(const std::array<T, N>& t) const -> std::size_t {
         return std::apply(
             [](const auto&... elems) {
                 std::size_t seed = 0;

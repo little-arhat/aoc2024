@@ -2,22 +2,6 @@
 #include "utils.hpp"
 
 
-struct array_hash {
-    template <typename T>
-    auto operator()(const std::array<T, 4>& t) const -> std::size_t {
-        return std::apply(
-            [](const auto&... elems) {
-                std::size_t seed = 0;
-                ((seed ^= std::hash<std::decay_t<decltype(elems)>>{}(elems) +
-                          0x9e3779b9 + (seed << 6) + (seed >> 2)),
-                 ...);
-                return seed;
-            },
-            t);
-    }
-};
-
-
 auto bits(unsigned long i) -> std::string {
     std::ostringstream oss;
     oss << std::bitset<64>(i);
