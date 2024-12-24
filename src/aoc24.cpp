@@ -1,10 +1,11 @@
-#include <deque>
 #include "utils.hpp"
 
 
-// operands
-using ops = std::pair<std::string, std::string>;
-
+using str = std::string;
+template <typename K, typename V>
+using hashmap = std::unordered_map<K, V>;
+template <typename V>
+using hashset = std::unordered_set<V>;
 
 enum class Op : uint8_t {
     OR,
@@ -33,7 +34,7 @@ auto run_op(Op op, uint8_t a, uint8_t b) -> uint8_t {
     }
 }
 
-auto op_to_string(Op op) -> std::string {
+auto op_to_string(Op op) -> str {
     switch (op) {
         case Op::OR:
             return "OR";
@@ -45,21 +46,78 @@ auto op_to_string(Op op) -> std::string {
 }
 
 
+auto eval(hashmap<str, uint8_t> state,
+          const hashmap<str, std::tuple<Op, str, str>>& rules,
+          const std::vector<str>& gates) -> unsigned long {
+    unsigned long z = 0;
+    for (auto& gate : gates) {
+        if (state.contains(gate)) {
+            continue;  // already computed
+        }
+        auto [op, d1, d2] = rules.at(gate);
+        auto d1v = state[d1];
+        auto d2v = state[d2];
+        auto res = run_op(op, d1v, d2v);
+        state[gate] = res;
+        if (gate.starts_with('z')) {
+            uint8_t digit_pos = std::stoi(gate.substr(1, gate.size()));
+            unsigned long step = static_cast<unsigned long>(res) << digit_pos;
+            z += step;
+        }
+    }
+
+    return z;
+}
+
+
+auto topo(const hashmap<str, hashset<str>>& incoming) -> std::vector<str> {
+    hashmap<str, hashset<str>> outgoing;
+    hashset<str> no_incoming_edges;
+    hashmap<str, hashset<str>> deps;
+    for (auto& [n, dependencies] : incoming) {
+        if (dependencies.empty()) {
+            no_incoming_edges.insert(n);
+        } else {
+            for (auto nn : dependencies) {
+                deps[n].insert(nn);
+                outgoing[nn].insert(n);
+            }
+        }
+    }
+
+    std::vector<str> result;
+    result.reserve(incoming.size());
+    while (!no_incoming_edges.empty()) {
+        auto n = *no_incoming_edges.begin();
+        no_incoming_edges.erase(n);
+        result.push_back(n);
+        for (auto& m :
+             get_or_default(outgoing, n, std::unordered_set<std::string>{})) {
+            if (deps.contains(m)) {
+                deps.at(m).erase(n);
+                if (deps.at(m).empty()) {
+                    no_incoming_edges.insert(m);
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+
 auto second(std::string s) {
     std::println("{}", s);
 }
 
 
 auto first(std::string s) {
-    std::unordered_map<std::string, uint8_t> state;
-    // k computes -> values
-    std::unordered_map<std::string, std::unordered_set<std::string>> conns;
+    hashmap<std::string, uint8_t> state;
     // k can be computed by -> (op, a, b)
-    std::unordered_map<std::string, std::tuple<Op, std::string, std::string>>
-        rules;
+    hashmap<str, std::tuple<Op, str, str>> rules;
     // k depends on -> {a..}
-    std::unordered_map<std::string, std::unordered_set<std::string>> deps;
-    read_lines(s, [&state, &conns, &rules, &deps](std::string line) {
+    hashmap<std::string, hashset<std::string>> deps;
+    read_lines(s, [&state, &rules, &deps](std::string line) {
         if (line.find("->") != std::string::npos) {
             auto pos = line.find(" -> ");
             std::string expr(line.substr(0, pos));
@@ -72,8 +130,6 @@ auto first(std::string s) {
             std::string l = *v;
             Op op = op_from_string(*std::next(v));
             std::string r = *std::next(v, 2);
-            conns[l].insert(out);
-            conns[r].insert(out);
             rules[out] = {op, l, r};
             deps[out].insert(l);
             deps[out].insert(r);
@@ -85,49 +141,15 @@ auto first(std::string s) {
                             line.data() + line.size(),
                             value);
             state[gate] = value;
-            conns[gate] = {};
+            deps[gate] = {};
         }
     });
 
-    std::vector<std::string> gates;
-    gates.reserve(conns.size());
-    // 1. topo sort
-    auto ks = std::views::keys(state);
-    std::set<std::string> no_incoming_edges{ks.begin(), ks.end()};
-    // we can modify conns & deps no prob, don't need it later
-    while (!no_incoming_edges.empty()) {
-        auto n = *no_incoming_edges.begin();
-        no_incoming_edges.erase(n);
-        gates.push_back(n);
-        for (auto& m :
-             get_or_default(conns, n, std::unordered_set<std::string>{})) {
-            if (deps.contains(m)) {
-                deps.at(m).erase(n);
-                if (deps.at(m).empty()) {
-                    no_incoming_edges.insert(m);
-                }
-            }
-        }
-    }
 
+    // 1. topo sort
+    std::vector<std::string> gates = topo(deps);
     // 2. evaluate
-    unsigned long long z = 0;
-    for (auto& gate : gates) {
-        if (state.contains(gate)) {
-            continue;  // already computed
-        }
-        auto [op, d1, d2] = rules[gate];
-        auto d1v = state[d1];
-        auto d2v = state[d2];
-        auto res = run_op(op, d1v, d2v);
-        state[gate] = res;
-        if (gate.starts_with('z')) {
-            uint8_t digit_pos = std::stoi(gate.substr(1, gate.size()));
-            unsigned long long step = static_cast<unsigned long long>(res)
-                                      << digit_pos;
-            z += step;
-        }
-    }
+    unsigned long long z = eval(state, rules, gates);
     std::println("{}", z);
 }
 
