@@ -46,6 +46,44 @@ auto op_to_string(Op op) -> str {
 }
 
 
+auto topo(const hashmap<str, uint8_t>& precomputed,
+          const hashmap<str, std::tuple<Op, str, str>>& rules)
+    -> std::vector<str> {
+    auto ks = std::views::keys(precomputed);
+    hashset<str> no_incoming_edges{ks.begin(), ks.end()};
+
+    hashmap<str, hashset<str>> deps;
+    hashmap<str, hashset<str>> outgoing;
+    for (auto& [n, dependencies] : rules) {
+        auto [op, l, r] = dependencies;
+        deps[n].insert(l);
+        outgoing[l].insert(n);
+
+        deps[n].insert(r);
+        outgoing[r].insert(n);
+    }
+
+    std::vector<str> result;
+    result.reserve(rules.size() + precomputed.size());
+    while (!no_incoming_edges.empty()) {
+        auto n = *no_incoming_edges.begin();
+        no_incoming_edges.erase(n);
+        result.push_back(n);
+        for (auto& m :
+             get_or_default(outgoing, n, std::unordered_set<std::string>{})) {
+            if (deps.contains(m)) {
+                deps.at(m).erase(n);
+                if (deps.at(m).empty()) {
+                    no_incoming_edges.insert(m);
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+
 auto eval(hashmap<str, uint8_t> state,
           const hashmap<str, std::tuple<Op, str, str>>& rules,
           const std::vector<str>& gates) -> unsigned long {
@@ -70,39 +108,12 @@ auto eval(hashmap<str, uint8_t> state,
 }
 
 
-auto topo(const hashmap<str, hashset<str>>& incoming) -> std::vector<str> {
-    hashmap<str, hashset<str>> outgoing;
-    hashset<str> no_incoming_edges;
-    hashmap<str, hashset<str>> deps;
-    for (auto& [n, dependencies] : incoming) {
-        if (dependencies.empty()) {
-            no_incoming_edges.insert(n);
-        } else {
-            for (auto nn : dependencies) {
-                deps[n].insert(nn);
-                outgoing[nn].insert(n);
-            }
-        }
-    }
-
-    std::vector<str> result;
-    result.reserve(incoming.size());
-    while (!no_incoming_edges.empty()) {
-        auto n = *no_incoming_edges.begin();
-        no_incoming_edges.erase(n);
-        result.push_back(n);
-        for (auto& m :
-             get_or_default(outgoing, n, std::unordered_set<std::string>{})) {
-            if (deps.contains(m)) {
-                deps.at(m).erase(n);
-                if (deps.at(m).empty()) {
-                    no_incoming_edges.insert(m);
-                }
-            }
-        }
-    }
-
-    return result;
+auto eval(const hashmap<str, uint8_t>& precomputed,
+          const hashmap<str, std::tuple<Op, str, str>>& rules)
+    -> unsigned long {
+    std::vector<std::string> gates = topo(precomputed, rules);
+    hashmap<str, uint8_t> state{precomputed};
+    return eval(state, rules, gates);
 }
 
 
@@ -115,24 +126,14 @@ auto first(std::string s) {
     hashmap<std::string, uint8_t> state;
     // k can be computed by -> (op, a, b)
     hashmap<str, std::tuple<Op, str, str>> rules;
-    // k depends on -> {a..}
-    hashmap<std::string, hashset<std::string>> deps;
-    read_lines(s, [&state, &rules, &deps](std::string line) {
+    read_lines(s, [&state, &rules](std::string line) {
         if (line.find("->") != std::string::npos) {
-            auto pos = line.find(" -> ");
-            std::string expr(line.substr(0, pos));
-            std::string out(line.substr(pos + 4));
-            auto parts = std::views::split(line, std::string_view(" ")) |
-                         std::views::transform([](auto&& range) {
-                             return std::string(range.begin(), range.end());
-                         });
-            auto v = parts.begin();
-            std::string l = *v;
-            Op op = op_from_string(*std::next(v));
-            std::string r = *std::next(v, 2);
+            auto parts = split(line, ' ');
+            str l = parts[0];
+            Op op = op_from_string(parts[1]);
+            str r = parts[2];
+            str out = parts[4];
             rules[out] = {op, l, r};
-            deps[out].insert(l);
-            deps[out].insert(r);
         } else if (line.find(':') != std::string::npos) {
             auto pos = line.find(": ");
             std::string gate(line.substr(0, pos));
@@ -141,16 +142,10 @@ auto first(std::string s) {
                             line.data() + line.size(),
                             value);
             state[gate] = value;
-            deps[gate] = {};
         }
     });
 
-
-    // 1. topo sort
-    std::vector<std::string> gates = topo(deps);
-    // 2. evaluate
-    unsigned long long z = eval(state, rules, gates);
-    std::println("{}", z);
+    std::println("{}", eval(state, rules));
 }
 
 

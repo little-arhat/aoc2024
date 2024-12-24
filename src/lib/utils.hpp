@@ -108,7 +108,16 @@ auto split(const std::string_view& input, char c) -> std::vector<T> {
                std::from_chars(&*s.begin(), &*s.end(), value);
                return value;
            }) |
-           std::ranges::to<std::vector<int>>();
+           std::ranges::to<std::vector<T>>();
+}
+
+
+auto split(const std::string_view& input, char c) -> std::vector<std::string> {
+    return std::views::split(input, c) |
+           std::views::transform([](auto&& range) {
+               return std::string(range.begin(), range.end());
+           }) |
+           std::ranges::to<std::vector<std::string>>();
 }
 
 
@@ -145,8 +154,7 @@ std::ostream& print_container(std::ostream& os,
 
 template <typename K,
           typename V,
-          template <typename, typename, typename...>
-          class Map>
+          template <typename, typename, typename...> class Map>
 std::ostream& print_map(std::ostream& os,
                         const Map<K, V>& m,
                         const char* sep = ", ") {
