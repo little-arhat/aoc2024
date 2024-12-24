@@ -84,6 +84,20 @@ auto topo(const hashmap<str, uint8_t>& precomputed,
 }
 
 
+auto load(const hashmap<str, uint8_t>& state, char mask) -> unsigned long {
+    unsigned long res = 0;
+    for (auto [k, v] : state) {
+        if (k.starts_with(mask)) {
+            uint8_t digit_pos = std::stoi(k.substr(1, k.size()));
+            unsigned long step = static_cast<unsigned long>(v) << digit_pos;
+            res += step;
+        }
+    }
+
+    return res;
+}
+
+
 auto eval(hashmap<str, uint8_t> state,
           const hashmap<str, std::tuple<Op, str, str>>& rules,
           const std::vector<str>& gates) -> unsigned long {
@@ -116,7 +130,33 @@ auto eval(const hashmap<str, uint8_t>& precomputed,
 
 
 auto second(std::string s) {
-    std::println("{}", s);
+    hashmap<std::string, uint8_t> state;
+    // k can be computed by -> (op, a, b)
+    hashmap<str, std::tuple<Op, str, str>> rules;
+    read_lines(s, [&state, &rules](std::string line) {
+        if (line.find("->") != std::string::npos) {
+            auto parts = split(line, ' ');
+            str l = parts[0];
+            Op op = op_from_string(parts[1]);
+            str r = parts[2];
+            str out = parts[4];
+            rules[out] = {op, l, r};
+        } else if (line.find(':') != std::string::npos) {
+            auto pos = line.find(": ");
+            std::string gate(line.substr(0, pos));
+            uint8_t value;
+            std::from_chars(line.data() + pos + 2,
+                            line.data() + line.size(),
+                            value);
+            state[gate] = value;
+        }
+    });
+
+    std::println("{}", state);
+    auto x = load(state, 'x');
+    auto y = load(state, 'y');
+    auto z = eval(state, rules);
+    std::println("x+y=z\n{} + {} = {}\nexpected: {}", x, y, z, x + y);
 }
 
 
