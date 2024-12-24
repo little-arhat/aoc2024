@@ -93,9 +93,7 @@ auto eval(hashmap<str, uint8_t> state,
             continue;  // already computed
         }
         auto [op, d1, d2] = rules.at(gate);
-        auto d1v = state[d1];
-        auto d2v = state[d2];
-        auto res = run_op(op, d1v, d2v);
+        auto res = run_op(op, state[d1], state[d2]);
         state[gate] = res;
         if (gate.starts_with('z')) {
             uint8_t digit_pos = std::stoi(gate.substr(1, gate.size()));
