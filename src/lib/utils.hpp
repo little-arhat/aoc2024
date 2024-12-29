@@ -285,3 +285,11 @@ struct overload : Bases... {
 };
 using universal_string_hash =
     overload<std::hash<std::string>, std::hash<std::string_view>>;
+
+
+template <size_t N>
+auto bits(unsigned long i) -> std::string {
+    std::ostringstream oss;
+    oss << std::bitset<N>(i);
+    return std::string(oss.str());
+}

@@ -2,13 +2,6 @@
 #include "utils.hpp"
 
 
-auto bits(unsigned long i) -> std::string {
-    std::ostringstream oss;
-    oss << std::bitset<64>(i);
-    return std::string(oss.str());
-}
-
-
 auto mixprune(unsigned long secret, unsigned long result) -> unsigned long {
     secret ^= result;
     secret &= 0xFFFFFF;
