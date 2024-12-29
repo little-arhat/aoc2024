@@ -8,6 +8,7 @@ using hashmap = std::unordered_map<K, V>;
 template <typename V>
 using hashset = std::unordered_set<V>;
 
+
 enum class Op : uint8_t {
     OR,
     XOR,
@@ -34,23 +35,6 @@ auto run_op(Op op, uint8_t a, uint8_t b) -> uint8_t {
         case Op::AND:
             return (a & b) & 1;
     }
-}
-
-auto to_string(Op op) -> const str {
-    switch (op) {
-        case Op::OR:
-            return "OR";
-        case Op::XOR:
-            return "XOR";
-        case Op::AND:
-            return "AND";
-    }
-}
-
-
-auto to_string(const std::tuple<Op, str, str>& t) -> const str {
-    auto [op, a, b] = t;
-    return std::format("{} {} {}", a, to_string(op), b);
 }
 
 
@@ -152,36 +136,6 @@ auto eval(const hashmap<str, uint8_t>& precomputed,
 }
 
 
-auto eval_full(const hashmap<str, uint8_t>& precomputed,
-               const hashmap<str, std::tuple<Op, str, str>>& rules)
-    -> std::pair<unsigned long, hashmap<str, uint8_t>> {
-    std::vector<std::string> gates = topo(precomputed, rules);
-    hashmap<str, uint8_t> state{precomputed};
-    auto z = eval(state, rules, gates);
-    return {z, state};
-}
-
-
-auto swap_outs(const hashmap<str, std::tuple<Op, str, str>>& rules,
-               std::vector<std::pair<str, str>> pairs)
-    -> hashmap<str, std::tuple<Op, str, str>> {
-    hashmap<str, std::tuple<Op, str, str>> new_rules{rules};
-    for (auto [a, b] : pairs) {
-        auto old_a = new_rules[a];
-        auto old_b = new_rules[b];
-        new_rules[a] = old_b;
-        new_rules[b] = old_a;
-    }
-
-    return new_rules;
-}
-
-
-constexpr auto nth_bit(unsigned long value, size_t n) -> uint8_t {
-    return static_cast<uint8_t>((value >> n) & 1);
-}
-
-
 constexpr auto is_in_gate(const std::string_view& s) -> bool {
     return s[0] == 'x' || s[0] == 'y';
 }
@@ -212,6 +166,7 @@ auto second(std::string s) {
     });
 
     auto last_out = *std::ranges::max_element(std::views::keys(rules));
+    auto first_in = "x00";
     std::set<str> swapped;
 
     // https://en.wikipedia.org/wiki/Adder_(electronics)#Ripple-carry_adder
@@ -231,7 +186,7 @@ auto second(std::string s) {
             }
         } else if (is_out_gate(gate) && gate != last_out) {
             swapped.insert(gate);
-        } else if (op == Op::AND && (a != "x00" && b != "x00")) {
+        } else if (op == Op::AND && (a != first_in && b != first_in)) {
             for (auto& [other_gate, other_rule] : rules) {
                 auto [other_op, other_a, other_b] = other_rule;
                 if ((gate == other_a || gate == other_b) &&
