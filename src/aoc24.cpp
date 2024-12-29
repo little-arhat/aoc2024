@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "utils.hpp"
 
 
@@ -181,94 +182,25 @@ constexpr auto nth_bit(unsigned long value, size_t n) -> uint8_t {
 }
 
 
-struct NCRes {
-    hashmap<int, hashmap<str, int>> next_carry;
-    hashset<int> next_used;
-};
+constexpr auto is_in_gate(const std::string_view& s) -> bool {
+    return s[0] == 'x' || s[0] == 'y';
+}
 
-auto compute_next_carry(int i,
-                        const hashmap<int, hashmap<str, int>>& carry,
-                        const hashmap<str, std::tuple<Op, str, str>>& rules,
-                        const hashmap<str, uint8_t>& precomputed)
-    -> std::optional<NCRes> {
-    auto xi = std::format("x{:02}", i);
-    auto yi = std::format("y{:02}", i);
-    auto zi = std::format("z{:02}", i);
 
-    hashmap<int, hashmap<str, int>> next_carry;
-    hashset<int> next_used;
+constexpr auto is_out_gate(const std::string_view& s) -> bool {
+    return s[0] == 'z';
+}
 
-    for (int cv = 0; cv <= 1; ++cv) {
-        if (!carry.contains(cv))
-            continue;
 
-        auto carry_map = carry.at(cv);
-        for (int xv = 0; xv <= 1; ++xv) {
-            for (int yv = 0; yv <= 1; ++yv) {
-                auto cur = carry_map;
-                cur[xi] = xv;
-                cur[yi] = yv;
-
-                hashmap<str, uint8_t> state(precomputed.begin(),
-                                            precomputed.end());
-                for (const auto& [key, value] : cur) {
-                    state[key] = static_cast<uint8_t>(value);
-                }
-
-                // Continue debugging and applying idia from eliz to my code
-                // use evaluated & rules to find value equiv to:
-                // if (c.dest in cur) {
-                //     check(cur[c.dest] == curRes)
-                // } else {
-                //     cur[c.dest] = curRes
-                //             nextUsed += codeIndex
-                //             addNext(c.dest)
-                //         changes = true
-                // }
-
-                auto [z, evaluated] = eval_full(state, rules);
-                unsigned long checkz = preview(evaluated, 'z');
-                int zv = static_cast<int>(nth_bit(z, i));
-                int sum = xv + yv + cv;
-                std::println("\tchz: {}, evaluated: {}", checkz, evaluated);
-                std::println("z={}; xv={}; yv={}; cv={}; s1={}; cur={}",
-                             z,
-                             xv,
-                             yv,
-                             cv,
-                             (sum & 1),
-                             cur);
-
-                if (zv != (sum & 1))
-                    return std::nullopt;
-
-                int nc = sum >> 1;
-                std::println("NC:{}; contains:{}; cur={}",
-                             nc,
-                             next_carry.contains(nc),
-                             cur);
-                if (next_carry.contains(nc)) {
-                    for (const auto& [key, val] : next_carry[nc]) {
-                        if (cur.contains(key) && cur[key] != val) {
-                            cur.erase(key);
-                        }
-                    }
-                }
-
-                next_carry[nc] = cur;
-            }
-        }
-    }
-
-    return NCRes{next_carry, next_used};
+constexpr auto is_io_gate(const std::string_view& s) -> bool {
+    return is_out_gate(s) || is_in_gate(s);
 }
 
 
 auto second(std::string s) {
-    hashmap<std::string, uint8_t> state;
     // k can be computed by -> (op, a, b)
     hashmap<str, std::tuple<Op, str, str>> rules;
-    read_lines(s, [&state, &rules](std::string line) {
+    read_lines(s, [&rules](std::string line) {
         if (line.find("->") != std::string::npos) {
             auto parts = split(line, ' ');
             str l = parts[0];
@@ -276,35 +208,41 @@ auto second(std::string s) {
             str r = parts[2];
             str out = parts[4];
             rules[out] = {op, l, r};
-        } else if (line.find(':') != std::string::npos) {
-            auto pos = line.find(": ");
-            std::string gate(line.substr(0, pos));
-            uint8_t value;
-            std::from_chars(line.data() + pos + 2,
-                            line.data() + line.size(),
-                            value);
-            state[gate] = value;
         }
     });
 
-    hashmap<int, hashmap<str, int>> carry{};
-    carry[0] = {};
+    auto last_out = *std::ranges::max_element(std::views::keys(rules));
+    std::set<str> swapped;
 
-    //  next carry is NCRes(nextCarry={
-    //       0={dsr=0, y00=0, z00=1},
-    //       1={dsr=1, y00=1, x00=1, z00=0}},
-    //       nextUsed=[113, 188]) for 0 & {0={}}
-    if (auto nc = compute_next_carry(0, carry, rules, state)) {
-        std::println("{}; {}", nc->next_used, nc->next_carry);
+    // https://en.wikipedia.org/wiki/Adder_(electronics)#Ripple-carry_adder
+    for (auto& [gate, rule] : rules) {
+        auto [op, a, b] = rule;
+        if (op == Op::XOR) {
+            if (!is_io_gate(gate) && !is_io_gate(a) && !is_io_gate(b)) {
+                swapped.insert(gate);
+            }
+
+            for (auto& [other_gate, other_rule] : rules) {
+                auto [other_op, other_a, other_b] = other_rule;
+                if ((gate == other_a || gate == other_b) &&
+                    other_op == Op::OR) {
+                    swapped.insert(gate);
+                }
+            }
+        } else if (is_out_gate(gate) && gate != last_out) {
+            swapped.insert(gate);
+        } else if (op == Op::AND && (a != "x00" && b != "x00")) {
+            for (auto& [other_gate, other_rule] : rules) {
+                auto [other_op, other_a, other_b] = other_rule;
+                if ((gate == other_a || gate == other_b) &&
+                    other_op != Op::OR) {
+                    swapped.insert(gate);
+                }
+            }
+        }
     }
 
-    // auto ns = load<45>(68585520640, 34118178995231);
-    // auto z0 = eval(ns, rules);
-    // auto nr = swap_outs(
-    //     rules,
-    //     {{"z20", "nhs"}, {"wrc", "z34"}, {"ddn", "kqh"}, {"z09", "nnf"}});
-    // auto z1 = eval(ns, nr);
-    // std::println("{} vs {}", z0, z1);
+    std::println("{}", join_str(swapped, ','));
 }
 
 
@@ -337,7 +275,7 @@ auto first(std::string s) {
 
 auto main(int argc, char* argv[]) -> int {
     std::string filename = aoc(argc, argv, "../inputs/24.txt");
-    // first(filename);
+    first(filename);
     second(filename);
     return 0;
 }

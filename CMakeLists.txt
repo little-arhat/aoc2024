@@ -12,7 +12,7 @@ set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-extra-arg=-std=c++23")
 add_subdirectory(src/lib)
 include_directories(src/lib)
 
-foreach(i RANGE 1 24)
+foreach(i RANGE 1 25)
   set(target_name "aoc${i}")
   add_executable(${target_name} src/aoc${i}.cpp)
   target_link_libraries(${target_name} PRIVATE Utils)
