@@ -76,35 +76,6 @@ auto topo(const hashmap<str, uint8_t>& precomputed,
 }
 
 
-auto preview(const hashmap<str, uint8_t>& state, char mask) -> unsigned long {
-    unsigned long res = 0;
-    for (auto [k, v] : state) {
-        if (k.starts_with(mask)) {
-            uint8_t digit_pos = std::stoi(k.substr(1, k.size()));
-            unsigned long step = static_cast<unsigned long>(v) << digit_pos;
-            res += step;
-        }
-    }
-
-    return res;
-}
-
-
-template <size_t N>
-auto load(unsigned long x, unsigned long y) -> hashmap<str, uint8_t> {
-    std::bitset<N> bitsx(x);
-    std::bitset<N> bitsy(y);
-
-    hashmap<str, uint8_t> s;
-    for (size_t i = 0; i < N; ++i) {
-        s[std::format("x{:02}", i)] = bitsx[i];
-        s[std::format("y{:02}", i)] = bitsy[i];
-    }
-
-    return s;
-}
-
-
 auto eval(hashmap<str, uint8_t>& state,
           const hashmap<str, std::tuple<Op, str, str>>& rules,
           const std::vector<str>& gates) -> unsigned long {
